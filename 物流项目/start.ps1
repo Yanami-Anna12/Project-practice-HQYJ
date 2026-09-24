@@ -7,7 +7,9 @@
   与 start.bat 的区别：本脚本在后端最小化窗口 + 同时在本终端显示前端日志；
   Ctrl+C 会一并停掉后端。
 
-  只想双击运行的话，用 start.bat 更省事。
+  ★ 本文件必须以 UTF-8 with BOM 保存：
+    Windows PowerShell 5.1 默认按 GBK 读取 .ps1，没有 BOM 时中文会变乱码，
+    进而导致引号配对失败、脚本报语法错误。
 #>
 
 $ErrorActionPreference = 'Continue'
@@ -42,14 +44,39 @@ if (-not $pnpmCmd) {
 Ok ('pnpm: ' + (pnpm --version))
 
 # ---------- 2. MySQL ----------
+# 连接参数从 backend/.env 读取，不在脚本里硬编码密码
+# （早先写死过明文口令，提交到仓库造成泄露，已修正）
 Info '[2/5] 检查 MySQL ...'
-$env:MYSQL_PWD = '52misaka'
-$mysqlOut = & $MySqlExe -u root --connect-timeout=4 -e 'SELECT 1;' 2>&1
-$env:MYSQL_PWD = ''
-if ($mysqlOut -match '1') {
-  Ok 'MySQL 可连接'
+$envFile = Join-Path $Root 'backend\.env'
+if (-not (Test-Path $envFile)) {
+  Err ('找不到配置文件：' + $envFile)
+  Err '请先复制 backend/.env.example 为 backend/.env 并按本机情况修改。'
+  exit 1
+}
+
+$dbCfg = @{}
+foreach ($line in (Get-Content $envFile -Encoding UTF8)) {
+  if ($line -match '^\s*([A-Z_]+)\s*=\s*(.*)$') {
+    $dbCfg[$matches[1]] = $matches[2].Trim()
+  }
+}
+$dbUser = 'root'
+if ($dbCfg.ContainsKey('DB_USER')) { $dbUser = $dbCfg['DB_USER'] }
+$dbPass = ''
+if ($dbCfg.ContainsKey('DB_PASSWORD')) { $dbPass = $dbCfg['DB_PASSWORD'] }
+
+if (Test-Path $MySqlExe) {
+  $env:MYSQL_PWD = $dbPass
+  $mysqlOut = & $MySqlExe -u $dbUser --connect-timeout=4 -e 'SELECT 1;' 2>&1
+  $env:MYSQL_PWD = ''
+  if ($mysqlOut -match '1') {
+    Ok 'MySQL 可连接'
+  } else {
+    Warn 'MySQL 连接失败，后端会启动失败。'
+    Warn '请确认 MySQL 8.0 服务已启动、且 .env 里的 DB_USER/DB_PASSWORD 正确。'
+  }
 } else {
-  Warn 'MySQL 连接失败，后端会启动失败。请确认 MySQL 8.0 服务已启动。'
+  Ok '未找到 mysql.exe，跳过预检（后端会自行连接）'
 }
 
 # ---------- 3. 依赖 ----------
@@ -89,7 +116,10 @@ Write-Host ''
 Write-Host '  后端  http://127.0.0.1:8000/docs'
 Write-Host '  前端  http://127.0.0.1:5175'
 Write-Host ''
-Write-Host '  演示账号：admin/admin123（管理员）、dispatcher/123456（调度员）、viewer/123456（只读）'
+Write-Host '  演示账号（登录页点卡片自动填入，密码见 backend\.env）'
+Write-Host '    admin       系统管理员（全部 29 个权限）'
+Write-Host '    dispatcher  调度员'
+Write-Host '    viewer      只读观察者'
 Write-Host ''
 
 $backend = Start-Process -FilePath $Py -ArgumentList 'run.py' `

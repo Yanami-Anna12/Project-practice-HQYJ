@@ -9,12 +9,12 @@ echo.
 
 set "ROOT=%~dp0"
 set "PY=C:\Users\12966\miniconda3\envs\py312\python.exe"
+set "ENVFILE=%ROOT%backend\.env"
 
 REM ---------- 环境检查 ----------
 if not exist "%PY%" (
     echo [错误] 找不到 Python 3.12 环境：
     echo        %PY%
-    echo        请确认 conda 环境 py312 存在。
     pause
     exit /b 1
 )
@@ -26,17 +26,36 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM ---------- 检查 MySQL ----------
-echo [1/5] 检查 MySQL ...
-"C:\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p52misaka -e "SELECT 1;" >nul 2>nul
-if errorlevel 1 (
-    echo       [警告] MySQL 连接失败。后端启动后会报错。
-    echo       请确认 MySQL 8.0 服务已启动。
-) else (
-    echo       OK
+REM ---------- 从 .env 读数据库配置（不在脚本里硬编码密码）----------
+if not exist "%ENVFILE%" (
+    echo [错误] 找不到配置文件：%ENVFILE%
+    echo        请先复制 .env.example 为 .env 并按本机情况修改。
+    pause
+    exit /b 1
 )
 
-REM ---------- 检查依赖 ----------
+for /f "usebackq tokens=1,* delims==" %%a in ("%ENVFILE%") do (
+    if /i "%%a"=="DB_USER"     set "DB_USER=%%b"
+    if /i "%%a"=="DB_PASSWORD" set "DB_PASSWORD=%%b"
+    if /i "%%a"=="DB_NAME"     set "DB_NAME=%%b"
+)
+
+echo [1/5] 检查 MySQL ...
+set "MYSQL_EXE=C:\MySQL\MySQL Server 8.0\bin\mysql.exe"
+if exist "%MYSQL_EXE%" (
+    set "MYSQL_PWD=%DB_PASSWORD%"
+    "%MYSQL_EXE%" -u %DB_USER% --connect-timeout=4 -e "SELECT 1;" >nul 2>nul
+    if errorlevel 1 (
+        echo       [警告] 连接失败。请确认 MySQL 服务已启动、.env 里的口令正确。
+    ) else (
+        echo       OK
+    )
+    set "MYSQL_PWD="
+) else (
+    echo       [跳过] 找不到 mysql.exe，交由后端自行连接。
+)
+
+REM ---------- 依赖 ----------
 echo [2/5] 检查后端依赖 ...
 "%PY%" -c "import fastapi, sqlalchemy, ortools, langgraph" >nul 2>nul
 if errorlevel 1 (
@@ -54,18 +73,18 @@ if not exist "%ROOT%frontend\node_modules" (
     echo       OK
 )
 
-REM ---------- 载入初始数据（幂等） ----------
+REM ---------- 初始数据（幂等）----------
 echo [4/5] 检查数据库与初始数据 ...
 pushd "%ROOT%backend"
 "%PY%" seed.py >nul 2>nul
 if errorlevel 1 (
-    echo       [警告] seed 失败，可能 MySQL 未就绪。继续尝试启动 ...
+    echo       [警告] seed 失败，可能是 MySQL 未就绪。继续尝试启动 ...
 ) else (
     echo       OK
 )
 popd
 
-REM ---------- 启动两个服务 ----------
+REM ---------- 启动 ----------
 echo [5/5] 启动服务 ...
 start "调度后端 8000" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py"
 timeout /t 6 /nobreak >nul
@@ -79,12 +98,12 @@ echo     · 调度前端 5175   http://127.0.0.1:5175
 echo.
 echo   等约 10 秒后浏览器打开： http://127.0.0.1:5175
 echo.
-echo   演示账号（点卡片自动填入）：
-echo     admin      / admin123    系统管理员（全部权限）
-echo     dispatcher / 123456     调度员
-echo     viewer     / 123456     只读观察者
+echo   演示账号（登录页点卡片自动填入，密码见 backend\.env）：
+echo     admin       系统管理员（全部 29 个权限）
+echo     dispatcher  调度员
+echo     viewer      只读观察者
 echo.
-echo   关闭服务：直接关掉那两个黑窗口即可。
+echo   关闭服务：双击 stop.ps1，或直接关掉这两个黑窗口。
 echo ============================================================
 timeout /t 8 /nobreak >nul
 start "" http://127.0.0.1:5175
