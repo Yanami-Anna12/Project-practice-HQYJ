@@ -1,0 +1,4 @@
+# 忽略测试截图
+.verify/
+# 覆盖历史上因路径拼接失误散落在 frontend/ 根目录的截图
+.verify*.png
