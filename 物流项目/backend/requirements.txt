@@ -1,0 +1,39 @@
+# 车辆智能调度 Agent —— 后端依赖
+#
+# 本机使用 py312 conda 环境：
+#   C:\Users\12966\miniconda3\envs\py312\python.exe -m pip install -r requirements.txt
+#
+# 版本按本机实测可用版本锁定。
+
+# --- Web 框架 ---
+fastapi==0.138.0
+uvicorn==0.40.0
+pydantic==2.12.5
+pydantic-settings==2.14.2
+
+# --- 数据库 ---
+SQLAlchemy==2.0.51
+PyMySQL==1.2.0
+# 切到 PostgreSQL 时改用：psycopg[binary]==3.2.*
+#   并把 app/config.py 的 drivername 改为 postgresql+psycopg
+
+# --- 认证 ---
+bcrypt==5.0.0               # 密码哈希（不引入 passlib，它读 bcrypt.__about__ 会报警告）
+PyJWT==2.13.0               # JWT 签发与校验（HS256）
+
+# --- 调度工作流与求解 ---
+langgraph==1.2.11
+langgraph-checkpoint-sqlite==3.1.1
+ortools==9.15.6755          # CP-SAT 求解器
+
+# --- LLM（可选，仅用于方案解释）---
+langchain==1.3.15
+langchain-core==1.5.4
+langchain-deepseek==1.1.0
+
+# --- 图表导出（可选，报表模块）---
+# 前端用 ECharts 渲染，后端不生成图片，故无需 matplotlib
+
+# --- 测试 ---
+pytest==9.1.1
+httpx==0.28.1               # FastAPI TestClient 的底层 HTTP 客户端
