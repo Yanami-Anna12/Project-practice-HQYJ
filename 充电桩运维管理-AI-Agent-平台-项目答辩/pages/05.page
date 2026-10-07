@@ -1,0 +1,411 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  35 秒。八个 Agent 分三组讲，不要逐个念。
+  重点说「编排」这一类的职责是调度其它 Agent，不直接产出业务结果。
+elements:
+  - elementId: p05-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p05-code
+    elementType: text
+    bounds: [48, 32, 560, 16]
+    content:
+      style: $section
+      text: 04 / 八类 AI Agent
+  - elementId: p05-title
+    elementType: text
+    bounds: [48, 54, 864, 38]
+    content:
+      text: 八类 Agent 覆盖四条主线，硬约束在其之上
+      style: $pageTitle
+  - elementId: p05-gh
+    elementType: text
+    bounds: [48, 106, 864, 16]
+    content:
+      text: 业务 Agent（7 类，直接产出业务结果）
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p05-a1
+    elementType: shape
+    bounds: [48, 128, 208, 112]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p05-a1-h
+    elementType: shape
+    bounds: [48, 128, 208, 24]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-a1-l
+    elementType: text
+    bounds: [60, 132, 184, 16]
+    content:
+      text: AGENT 01
+      style: $label
+      fontSize: 8
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a1-t
+    elementType: text
+    bounds: [60, 162, 184, 20]
+    content:
+      text: 智能工单调度
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p05-a1-b
+    elementType: text
+    bounds: [60, 188, 184, 44]
+    content:
+      text: |-
+        多方案比选 → 人工确认
+        → 建单下发，子任务按
+        公式计算。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p05-a2
+    elementType: shape
+    bounds: [268, 128, 208, 112]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p05-a2-h
+    elementType: shape
+    bounds: [268, 128, 208, 24]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-a2-l
+    elementType: text
+    bounds: [280, 132, 184, 16]
+    content:
+      text: AGENT 02
+      style: $label
+      fontSize: 8
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a2-t
+    elementType: text
+    bounds: [280, 162, 184, 20]
+    content:
+      text: 智能故障诊断
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p05-a2-b
+    elementType: text
+    bounds: [280, 188, 184, 44]
+    content:
+      text: |-
+        检索知识库 + LLM 增强，
+        输出故障类别、根因与
+        处置措施。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p05-a3
+    elementType: shape
+    bounds: [488, 128, 208, 112]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p05-a3-h
+    elementType: shape
+    bounds: [488, 128, 208, 24]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-a3-l
+    elementType: text
+    bounds: [500, 132, 184, 16]
+    content:
+      text: AGENT 03
+      style: $label
+      fontSize: 8
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a3-t
+    elementType: text
+    bounds: [500, 162, 184, 20]
+    content:
+      text: 智能巡检报告
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p05-a3-b
+    elementType: text
+    bounds: [500, 188, 184, 44]
+    content:
+      text: |-
+        汇总巡检记录与异常项，
+        生成结构化巡检结论
+        与整改建议。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p05-a4
+    elementType: shape
+    bounds: [708, 128, 204, 112]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p05-a4-h
+    elementType: shape
+    bounds: [708, 128, 204, 24]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-a4-l
+    elementType: text
+    bounds: [720, 132, 180, 16]
+    content:
+      text: AGENT 04
+      style: $label
+      fontSize: 8
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a4-t
+    elementType: text
+    bounds: [720, 162, 180, 20]
+    content:
+      text: 智能运维建议
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p05-a4-b
+    elementType: text
+    bounds: [720, 188, 180, 44]
+    content:
+      text: |-
+        基于历史工单与故障
+        分布，给出运维重点
+        与资源配置建议。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p05-a5
+    elementType: shape
+    bounds: [48, 252, 208, 108]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p05-a5-h
+    elementType: shape
+    bounds: [48, 252, 208, 24]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-a5-l
+    elementType: text
+    bounds: [60, 256, 184, 16]
+    content:
+      text: AGENT 05
+      style: $label
+      fontSize: 8
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a5-t
+    elementType: text
+    bounds: [60, 286, 184, 20]
+    content:
+      text: 智能风控
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p05-a5-b
+    elementType: text
+    bounds: [60, 312, 184, 40]
+    content:
+      text: |-
+        识别超期、高频故障、
+        低效巡检等风险信号
+        并给出等级。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p05-a6
+    elementType: shape
+    bounds: [268, 252, 208, 108]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p05-a6-h
+    elementType: shape
+    bounds: [268, 252, 208, 24]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-a6-l
+    elementType: text
+    bounds: [280, 256, 184, 16]
+    content:
+      text: AGENT 06
+      style: $label
+      fontSize: 8
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a6-t
+    elementType: text
+    bounds: [280, 286, 184, 20]
+    content:
+      text: 智能报告
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p05-a6-b
+    elementType: text
+    bounds: [280, 312, 184, 40]
+    content:
+      text: |-
+        日 / 周 / 月 / 即时四类，
+        六大内容模块固定，
+        支持追问与历史对比。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p05-a7
+    elementType: shape
+    bounds: [488, 252, 208, 108]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p05-a7-h
+    elementType: shape
+    bounds: [488, 252, 208, 24]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-a7-l
+    elementType: text
+    bounds: [500, 256, 184, 16]
+    content:
+      text: AGENT 07
+      style: $label
+      fontSize: 8
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a7-t
+    elementType: text
+    bounds: [500, 286, 184, 20]
+    content:
+      text: 智能数据分析
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p05-a7-b
+    elementType: text
+    bounds: [500, 312, 184, 40]
+    content:
+      text: |-
+        对统计日表做趋势、
+        对比与下钻分析，
+        支撑看板结论。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p05-a8
+    elementType: shape
+    bounds: [708, 252, 204, 108]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $ink, width: 1.5}
+  - elementId: p05-a8-l
+    elementType: text
+    bounds: [720, 264, 180, 16]
+    content:
+      text: AGENT 08 / 编排
+      style: $label
+      fontSize: 8
+      color: $white
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p05-a8-t
+    elementType: text
+    bounds: [720, 288, 180, 20]
+    content:
+      text: 编排
+      style: $body
+      fontSize: 12
+      color: $white
+      bold: true
+  - elementId: p05-a8-b
+    elementType: text
+    bounds: [720, 312, 180, 40]
+    content:
+      text: |-
+        不是业务 Agent，
+        而是调度其它 Agent
+        的编排角色。
+      style: $small
+      fontSize: 8.5
+      color: $white
+      lineHeight: 1.5
+  - elementId: p05-band
+    elementType: shape
+    bounds: [48, 388, 864, 48]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p05-band-label
+    elementType: text
+    bounds: [66, 402, 150, 22]
+    content:
+      text: 分层原则
+      style: $label
+      fontSize: 8.5
+      color: $accentPale
+      letterSpacing: 0.8
+      align: [left, middle]
+  - elementId: p05-band-text
+    elementType: text
+    bounds: [210, 398, 686, 30]
+    content:
+      text: Agent 只负责「生成与解释」，可行性由硬约束与求解器保证 —— 换更强的模型也不会改变方案的可行性结论。
+      style: $body
+      fontSize: 12.5
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p05-llm
+    elementType: text
+    bounds: [48, 448, 864, 56]
+    content:
+      text: |-
+        LLM 接入现状：provider = deepseek，model = deepseek-chat，健康检查 status = ok（/api/v1/ai/health 实测）。未配置 API Key 时自动降级为规则引擎，功能不中断。
+        知识库检索：VECTOR_STORE=local 时使用内置 TF-IDF + 余弦相似度，中文按 bigram 切分以提升召回，无需外部向量库依赖。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.6
+  - elementId: p05-source
+    elementType: text
+    bounds: [48, 512, 864, 16]
+    content:
+      text: 依据：backend/app/core/enums.py 第 111-119 行 AgentType 枚举；backend/app/ai/knowledge.py；GET /api/v1/ai/health 实测返回。
+      style: $small
+      fontSize: 7.5
+  - elementId: p05-page
+    elementType: text
+    bounds: [872, 28, 40, 16]
+    content:
+      text: '05'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, top]

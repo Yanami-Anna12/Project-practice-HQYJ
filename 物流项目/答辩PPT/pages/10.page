@@ -1,0 +1,178 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  20 秒。快速指一下分层，不要逐条念。重点说 28 张表和第 4 层是三阶段求解器。
+elements:
+  - elementId: p10-top
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p10-code
+    elementType: text
+    bounds: [54, 34, 560, 18]
+    content:
+      style: $section
+      text: 09 / 系统架构
+  - elementId: p10-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 四层架构，规则集中在服务层
+      style: $pageTitle
+  - elementId: p10-t1
+    elementType: shape
+    bounds: [54, 122, 852, 74]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p10-t1-tag
+    elementType: shape
+    bounds: [54, 122, 150, 74]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p10-t1-tag-text
+    elementType: text
+    bounds: [66, 122, 126, 74]
+    content:
+      text: |-
+        LAYER 1
+        表现层
+      style: $small
+      fontSize: 11
+      color: $yellow
+      bold: true
+      align: [left, middle]
+  - elementId: p10-t1-body
+    elementType: text
+    bounds: [222, 134, 670, 50]
+    content:
+      text: |-
+        Vue 3.5 + Vite 6 + Pinia + Element Plus + ECharts    ·    28 个页面视图
+        菜单与按钮按服务端返回的权限动态裁剪；前端裁剪只是体验优化，最终防线在后端。
+      style: $small
+      fontSize: 10
+      lineHeight: 1.7
+  - elementId: p10-t2
+    elementType: shape
+    bounds: [54, 208, 852, 74]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p10-t2-tag
+    elementType: shape
+    bounds: [54, 208, 150, 74]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p10-t2-tag-text
+    elementType: text
+    bounds: [66, 208, 126, 74]
+    content:
+      text: |-
+        LAYER 2
+        接口层
+      style: $small
+      fontSize: 11
+      color: $yellow
+      bold: true
+      align: [left, middle]
+  - elementId: p10-t2-body
+    elementType: text
+    bounds: [222, 220, 670, 50]
+    content:
+      text: |-
+        FastAPI + Pydantic v2 + JWT(HS256) + bcrypt    ·    require_permission() 统一鉴权
+        有效权限 = 所有启用角色权限的并集，且权限点自身也须启用；用户无角色则权限为空集。
+      style: $small
+      fontSize: 10
+      lineHeight: 1.7
+  - elementId: p10-t3
+    elementType: shape
+    bounds: [54, 294, 852, 74]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p10-t3-tag
+    elementType: shape
+    bounds: [54, 294, 150, 74]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p10-t3-tag-text
+    elementType: text
+    bounds: [66, 294, 126, 74]
+    content:
+      text: |-
+        LAYER 3
+        服务层
+      style: $small
+      fontSize: 11
+      color: $yellow
+      bold: true
+      align: [left, middle]
+  - elementId: p10-t3-body
+    elementType: text
+    bounds: [222, 306, 670, 50]
+    content:
+      text: |-
+        SOLVER 三阶段求解  ·  RBAC 权限并集  ·  AUDIT 只追加  ·  RULE 版本治理  ·  REPORT 报表口径
+        业务规则全部集中在这一层，接口层不重复判断，避免规则散落导致不一致。
+      style: $small
+      fontSize: 10
+      lineHeight: 1.7
+  - elementId: p10-t4
+    elementType: shape
+    bounds: [54, 380, 852, 74]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p10-t4-tag
+    elementType: shape
+    bounds: [54, 380, 150, 74]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p10-t4-tag-text
+    elementType: text
+    bounds: [66, 380, 126, 74]
+    content:
+      text: |-
+        LAYER 4
+        数据层
+      style: $small
+      fontSize: 11
+      color: $yellow
+      bold: true
+      align: [left, middle]
+  - elementId: p10-t4-body
+    elementType: text
+    bounds: [222, 392, 670, 50]
+    content:
+      text: |-
+        SQLAlchemy 2.0 + MySQL 8.0    ·    28 张表    ·    未使用任何 MySQL 方言
+        审计日志四层保证只追加：代码层只 INSERT、接口层只有 GET、模型层 actor 可空、数据层冗余快照。
+      style: $small
+      fontSize: 10
+      lineHeight: 1.7
+  - elementId: p10-source
+    elementType: text
+    bounds: [54, 496, 852, 16]
+    content:
+      text: 数据库选型说明：文档推荐 PostgreSQL，本机无 PG 且 Docker 守护进程未启动，改用 MySQL；换 PG 只需改 config.py 的 drivername 一行。
+      style: $small
+      fontSize: 8
+  - elementId: p10-page
+    elementType: text
+    bounds: [872, 496, 34, 16]
+    content:
+      text: '10'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, middle]

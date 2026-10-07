@@ -1,0 +1,260 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  40 秒。先讲约束从哪来（需求文档 1.4 归纳的 8 条），再讲为什么互相冲突。
+  关键对比：2290 vs 800 —— 一趟车物理上装不下。
+  这段为第 7 页的「拆单」问题埋线。
+elements:
+  - elementId: p03-rail
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p03-code
+    elementType: text
+    bounds: [54, 34, 500, 18]
+    content:
+      style: $section
+      text: 02 / 需求与约束
+  - elementId: p03-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 八条约束同时生效，人工已经排不动了
+      style: $pageTitle
+  - elementId: p03-left-panel
+    elementType: shape
+    bounds: [54, 118, 300, 258]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p03-left-label
+    elementType: text
+    bounds: [72, 134, 264, 18]
+    content:
+      text: 单店日货量 vs 单车上限
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1
+  - elementId: p03-left-metric
+    elementType: text
+    bounds: [72, 158, 264, 58]
+    content:
+      text: '2290'
+      style: $metric
+      fontSize: 46
+      color: $yellow
+  - elementId: p03-left-unit
+    elementType: text
+    bounds: [72, 216, 264, 18]
+    content:
+      text: 最高单店日货量
+      style: $body
+      fontSize: 12
+      color: $white
+      bold: true
+  - elementId: p03-left-div
+    elementType: line
+    bounds: [72, 246, 264, 1]
+    viewBox: [264, 1]
+    points: 0,0 264,0
+    border: {width: 0.8, color: $slate}
+  - elementId: p03-left-metric2
+    elementType: text
+    bounds: [72, 260, 264, 46]
+    content:
+      text: '800'
+      style: $metric
+      fontSize: 36
+      color: $white
+  - elementId: p03-left-unit2
+    elementType: text
+    bounds: [72, 308, 264, 18]
+    content:
+      text: 四米二单车上限
+      style: $body
+      fontSize: 12
+      color: $steel
+      bold: true
+  - elementId: p03-left-concl
+    elementType: text
+    bounds: [72, 336, 264, 30]
+    content:
+      text: 差额 1490，一趟车装不完
+      style: $small
+      fontSize: 10
+      color: $yellowPale
+  - elementId: p03-tbl-head
+    elementType: text
+    bounds: [378, 118, 528, 18]
+    content:
+      text: 现有条件 / 需求文档 1.3
+      style: $label
+      fontSize: 9
+      letterSpacing: 1
+  - elementId: p03-table
+    elementType: table
+    bounds: [378, 142, 528, 108]
+    style: $operations
+    columnWidths:
+      - 0.2
+      - 0.18
+      - 0.22
+      - 0.22
+      - 0.18
+    rowHeights:
+      - 0.25
+      - 0.25
+      - 0.25
+      - 0.25
+    rows:
+      - - text: 车型
+        - text: 数量
+        - text: 最低装载
+        - text: 最高装载
+        - text: 日趟次
+      - - text: 四米二
+        - text: 28 台
+        - text: '630'
+        - text: '800'
+        - text: 2 趟
+      - - text: 大包
+        - text: 3 台
+        - text: '300'
+        - text: '420'
+        - text: 2 趟
+      - - text: 小包
+        - text: 9 台
+        - text: '1'
+        - text: '300'
+        - text: 4 趟
+  - elementId: p03-confl-head
+    elementType: text
+    bounds: [378, 266, 528, 18]
+    content:
+      text: 约束之间为什么会互相顶
+      style: $label
+      fontSize: 9
+      letterSpacing: 1
+  - elementId: p03-confl
+    elementType: text
+    bounds: [378, 290, 528, 86]
+    content:
+      text: |-
+        想装满一辆四米二 → 把两三个门店拼到一趟；
+        拼到一起之后 → 可能地形不让过、线路对不上，
+        或者其中一个是下午店。
+      style: $body
+      fontSize: 13
+      lineHeight: 1.5
+  - elementId: p03-tag-1
+    elementType: shape
+    bounds: [378, 384, 124, 26]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1}
+  - elementId: p03-tag-1-text
+    elementType: text
+    bounds: [386, 388, 108, 18]
+    content:
+      text: 装载量门槛
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [center, middle]
+  - elementId: p03-tag-2
+    elementType: shape
+    bounds: [510, 384, 124, 26]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1}
+  - elementId: p03-tag-2-text
+    elementType: text
+    bounds: [518, 388, 108, 18]
+    content:
+      text: 上下午时段
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [center, middle]
+  - elementId: p03-tag-3
+    elementType: shape
+    bounds: [642, 384, 124, 26]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1}
+  - elementId: p03-tag-3-text
+    elementType: text
+    bounds: [650, 388, 108, 18]
+    content:
+      text: 地形通行
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [center, middle]
+  - elementId: p03-tag-4
+    elementType: shape
+    bounds: [774, 384, 132, 26]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1}
+  - elementId: p03-tag-4-text
+    elementType: text
+    bounds: [782, 388, 116, 18]
+    content:
+      text: 线路归属与交界
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [center, middle]
+  - elementId: p03-gate
+    elementType: shape
+    bounds: [54, 420, 852, 54]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p03-gate-label
+    elementType: text
+    bounds: [74, 434, 150, 26]
+    content:
+      text: 关键矛盾
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 0.8
+      align: [left, middle]
+  - elementId: p03-gate-text
+    elementType: text
+    bounds: [212, 430, 676, 34]
+    content:
+      text: 调度员靠经验排一次要几个小时，排完说不清为什么这么排；换个人排，结果完全不同。
+      style: $body
+      fontSize: 14
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p03-source
+    elementType: text
+    bounds: [54, 496, 700, 16]
+    content:
+      text: 数据来源：需求文档 1.3 现有条件 / 1.4 核心业务约束 / 1.6 项目目标；2290 为实测单店日货量峰值
+      style: $small
+      fontSize: 8
+  - elementId: p03-page
+    elementType: text
+    bounds: [872, 496, 34, 16]
+    content:
+      text: '03'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, middle]

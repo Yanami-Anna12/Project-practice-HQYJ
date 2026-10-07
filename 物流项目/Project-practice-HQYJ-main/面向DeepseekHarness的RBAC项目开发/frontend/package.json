@@ -1,0 +1,26 @@
+{
+  "name": "rbac-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "RBAC 权限管理系统前端（Vue 3 + Vite + Pinia + Element Plus）",
+  "scripts": {
+    "dev": "vite",
+    "dev:static": "vite --mode static",
+    "build": "vite build",
+    "build:static": "vite build --mode static",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "element-plus": "^2.9.3",
+    "@element-plus/icons-vue": "^2.3.1",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  }
+}

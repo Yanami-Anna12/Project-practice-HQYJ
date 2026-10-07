@@ -1,0 +1,249 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  25 秒。四层架构，快速指一下。重点说两件事：
+  一是规则版本化（rule_version 表、可回滚）；二是数据库选型（SQLite 开箱可跑，PostgreSQL 可切）。
+elements:
+  - elementId: p09-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p09-code
+    elementType: text
+    bounds: [48, 32, 560, 16]
+    content:
+      style: $section
+      text: 08 / 系统架构
+  - elementId: p09-title
+    elementType: text
+    bounds: [48, 54, 864, 38]
+    content:
+      text: 四层架构，规则可版本化、可回滚
+      style: $pageTitle
+  - elementId: p09-t1
+    elementType: shape
+    bounds: [48, 104, 700, 66]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p09-t1-tag
+    elementType: shape
+    bounds: [48, 104, 128, 66]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p09-t1-tag-t
+    elementType: text
+    bounds: [58, 104, 108, 66]
+    content:
+      text: |-
+        L1
+        表现层
+      style: $small
+      fontSize: 9.5
+      color: $accentPale
+      bold: true
+      align: [left, middle]
+  - elementId: p09-t1-b
+    elementType: text
+    bounds: [190, 116, 550, 44]
+    content:
+      text: |-
+        Vue 3.5 · Vite 6 · Pinia · Ant Design Vue · ECharts  ·  28 个 .vue 页面
+        23 个页面路由；菜单与按钮按服务端权限动态裁剪
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.6
+  - elementId: p09-t2
+    elementType: shape
+    bounds: [48, 180, 700, 66]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p09-t2-tag
+    elementType: shape
+    bounds: [48, 180, 128, 66]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p09-t2-tag-t
+    elementType: text
+    bounds: [58, 180, 108, 66]
+    content:
+      text: |-
+        L2
+        接口层
+      style: $small
+      fontSize: 9.5
+      color: $accentPale
+      bold: true
+      align: [left, middle]
+  - elementId: p09-t2-b
+    elementType: text
+    bounds: [190, 192, 550, 44]
+    content:
+      text: |-
+        FastAPI · Pydantic v2 · python-jose JWT · bcrypt  ·  103 个接口路径 / 114 个操作
+        统一 require_permission() 鉴权；apply_data_scope() 做四范围过滤
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.6
+  - elementId: p09-t3
+    elementType: shape
+    bounds: [48, 256, 700, 66]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p09-t3-tag
+    elementType: shape
+    bounds: [48, 256, 128, 66]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p09-t3-tag-t
+    elementType: text
+    bounds: [58, 256, 108, 66]
+    content:
+      text: |-
+        L3
+        服务层
+      style: $small
+      fontSize: 9.5
+      color: $accentPale
+      bold: true
+      align: [left, middle]
+  - elementId: p09-t3-b
+    elementType: text
+    bounds: [190, 268, 550, 44]
+    content:
+      text: |-
+        solver 硬约束与 CP-SAT  ·  work_order 子任务公式  ·  rbac 权限并集
+        audit 规则版本与审计  ·  report_service 报告生成  ·  LangGraph 编排
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.6
+  - elementId: p09-t4
+    elementType: shape
+    bounds: [48, 332, 700, 66]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $ink, width: 1.2}
+  - elementId: p09-t4-tag
+    elementType: shape
+    bounds: [48, 332, 128, 66]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p09-t4-tag-t
+    elementType: text
+    bounds: [58, 332, 108, 66]
+    content:
+      text: |-
+        L4
+        数据层
+      style: $small
+      fontSize: 9.5
+      color: $accentPale
+      bold: true
+      align: [left, middle]
+  - elementId: p09-t4-b
+    elementType: text
+    bounds: [190, 344, 550, 44]
+    content:
+      text: |-
+        SQLAlchemy 2.0 异步  ·  SQLite 默认（aiosqlite，NullPool + WAL）  ·  PostgreSQL 可切
+        32 张表 / 117 个索引；psycopg 驱动已装，改 DATABASE_URL 即切换
+      style: $small
+      fontSize: 8.5
+      color: $white
+      lineHeight: 1.6
+  - elementId: p09-right
+    elementType: shape
+    bounds: [768, 104, 144, 294]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p09-right-h
+    elementType: shape
+    bounds: [768, 104, 144, 26]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p09-right-l
+    elementType: text
+    bounds: [778, 108, 124, 18]
+    content:
+      text: 规则版本化
+      style: $label
+      fontSize: 8.5
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p09-right-b
+    elementType: text
+    bounds: [780, 142, 122, 244]
+    content:
+      text: |-
+        表 rule_version
+        8 个自有字段
+
+        version
+        rule_snapshot
+        hard_constraints
+        soft_constraints
+        is_active
+        change_log
+        created_by
+        effective_at
+
+        初始版本 v1.0.0
+        当前 active
+
+        激活新版本时
+        先把其它行置为
+        非激活，保证同一
+        时刻只有一个生效
+        版本，可回滚。
+      style: $small
+      fontSize: 8
+      lineHeight: 1.42
+  - elementId: p09-band
+    elementType: shape
+    bounds: [48, 410, 864, 46]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p09-band-text
+    elementType: text
+    bounds: [66, 416, 828, 34]
+    content:
+      text: 规则不是写死在代码里的常量 —— 调整频率、SLA、权重都可以发新版本，并在出问题时回滚。
+      style: $body
+      fontSize: 12.5
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p09-source
+    elementType: text
+    bounds: [48, 466, 820, 40]
+    content:
+      text: |-
+        依据：models/system.py:154-166（RuleVersion 字段）；services/audit.py:125-164（激活与读取）；
+        bootstrap.py:249-266（初始 v1.0.0）；GET /api/v1/admin/rules/active 实测。表数与索引数取自 sqlite_master 查询。
+      style: $small
+      fontSize: 7.5
+      lineHeight: 1.5
+  - elementId: p09-page
+    elementType: text
+    bounds: [872, 508, 40, 16]
+    content:
+      text: '09'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, middle]

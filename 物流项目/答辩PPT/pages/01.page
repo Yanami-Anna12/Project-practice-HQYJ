@@ -1,0 +1,205 @@
+pageType: cover
+background:
+  type: solid
+  color: $paper
+notes: |
+  开场 15 秒。一句话说清做什么：把调度员的经验固化成规则，把排车从手工劳动变成选方案。
+  金句：「人做决策，机器做计算。」说完停一秒。
+elements:
+  - elementId: p01-rail
+    elementType: shape
+    bounds: [54, 70, 14, 300]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p01-code
+    elementType: text
+    bounds: [88, 48, 420, 20]
+    content:
+      style: $section
+      text: 项目答辩 / VEHICLE DISPATCH AGENT
+  - elementId: p01-title
+    elementType: text
+    bounds: [86, 86, 560, 150]
+    content:
+      style: $display
+      fontSize: 46
+      text: |-
+        车辆智能调度 Agent
+        把调度经验变成规则
+  - elementId: p01-subtitle
+    elementType: text
+    bounds: [90, 252, 480, 66]
+    content:
+      text: |-
+        每天门店货量报上来以后，算出一张排车表：哪台车、跑几趟、
+        上午下午分别送哪些门店、每趟装多少货，交给调度员确认下发。
+      style: $body
+      fontSize: 14
+      color: $slate
+  - elementId: p01-meta
+    elementType: text
+    bounds: [90, 336, 460, 18]
+    content:
+      text: FastAPI · LangGraph · OR-Tools CP-SAT · Vue 3
+      style: $small
+      fontSize: 10
+      color: $graphite
+      bold: true
+  - elementId: p01-node-1
+    elementType: shape
+    bounds: [636, 96, 92, 56]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 2}
+  - elementId: p01-node-1-tag
+    elementType: shape
+    bounds: [636, 96, 92, 10]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p01-node-1-text
+    elementType: text
+    bounds: [644, 112, 76, 36]
+    content:
+      text: |-
+        01
+        货量上报
+      style: $body
+      fontSize: 12
+      bold: true
+      align: [center, middle]
+  - elementId: p01-node-2
+    elementType: shape
+    bounds: [726, 170, 104, 62]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 2}
+  - elementId: p01-node-2-text
+    elementType: text
+    bounds: [736, 182, 84, 38]
+    content:
+      text: |-
+        02
+        三阶段求解
+      style: $body
+      fontSize: 12
+      bold: true
+      color: $white
+      align: [center, middle]
+  - elementId: p01-node-3
+    elementType: shape
+    bounds: [814, 248, 104, 64]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $graphite, width: 2}
+  - elementId: p01-node-3-text
+    elementType: text
+    bounds: [824, 260, 84, 40]
+    content:
+      text: |-
+        03
+        确认下发
+      style: $body
+      fontSize: 12
+      bold: true
+      align: [center, middle]
+  - elementId: p01-line-1
+    elementType: line
+    bounds: [700, 152, 1, 20]
+    viewBox: [1, 20]
+    points: 0,0 0,20
+    border: {width: 3, color: $graphite}
+  - elementId: p01-line-2
+    elementType: line
+    bounds: [700, 172, 28, 1]
+    viewBox: [28, 1]
+    points: 0,0 28,0
+    border: {width: 3, color: $graphite}
+  - elementId: p01-line-3
+    elementType: line
+    bounds: [778, 232, 1, 18]
+    viewBox: [1, 18]
+    points: 0,0 0,18
+    border: {width: 3, color: $graphite}
+  - elementId: p01-line-4
+    elementType: line
+    bounds: [778, 250, 38, 1]
+    viewBox: [38, 1]
+    points: 0,0 38,0
+    border: {width: 3, color: $graphite}
+  - elementId: p01-pallet
+    elementType: shape
+    bounds: [640, 348, 236, 52]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 2}
+  - elementId: p01-pallet-text
+    elementType: text
+    bounds: [654, 362, 208, 24]
+    content:
+      text: 人做决策 · 机器做计算
+      style: $body
+      fontSize: 13
+      bold: true
+      align: [center, middle]
+  - elementId: p01-pallet-base
+    elementType: shape
+    bounds: [630, 404, 256, 10]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p01-foot-1
+    elementType: shape
+    bounds: [646, 414, 36, 12]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p01-foot-2
+    elementType: shape
+    bounds: [740, 414, 36, 12]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p01-foot-3
+    elementType: shape
+    bounds: [834, 414, 36, 12]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p01-claim-band
+    elementType: shape
+    bounds: [54, 452, 852, 58]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p01-claim-label
+    elementType: text
+    bounds: [74, 466, 150, 24]
+    content:
+      text: 项目定位
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 0.8
+      align: [left, middle]
+  - elementId: p01-claim
+    elementType: text
+    bounds: [212, 462, 668, 32]
+    content:
+      text: 把调度经验做成可执行、可解释、可追溯的规则。
+      style: $body
+      fontSize: 15
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p01-page
+    elementType: text
+    bounds: [872, 30, 34, 18]
+    content:
+      text: '01'
+      style: $small
+      fontSize: 11
+      color: $graphite
+      bold: true
+      align: [right, top]

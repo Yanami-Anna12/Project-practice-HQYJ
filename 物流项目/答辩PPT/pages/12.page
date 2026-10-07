@@ -1,0 +1,197 @@
+pageType: closing
+background:
+  type: solid
+  color: $graphite
+notes: |
+  收尾 15 秒。念完定位句，停两秒，然后致谢。
+  不要急着关页面 —— 让老师看清这三个数字。
+elements:
+  - elementId: p12-top
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p12-code
+    elementType: text
+    bounds: [54, 40, 560, 18]
+    content:
+      style: $section
+      text: 11 / 总结
+  - elementId: p12-title
+    elementType: text
+    bounds: [54, 66, 520, 100]
+    content:
+      text: |-
+        把调度经验
+        做成可执行的规则
+      style: $display
+      fontSize: 38
+      color: $white
+      lineHeight: 1.14
+  - elementId: p12-sub
+    elementType: text
+    bounds: [54, 178, 490, 74]
+    content:
+      text: |-
+        可执行 —— 方案能直接下发派车
+        可解释 —— 每套方案带评分与推荐理由
+        可追溯 —— 下发记录与审计日志只追加
+      style: $body
+      fontSize: 12.5
+      color: $steel
+      lineHeight: 1.75
+  - elementId: p12-k1
+    elementType: shape
+    bounds: [596, 66, 148, 92]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p12-k1-n
+    elementType: text
+    bounds: [610, 78, 122, 44]
+    content:
+      text: '99.8%'
+      style: $metric
+      fontSize: 24
+      align: [left, middle]
+  - elementId: p12-k1-l
+    elementType: text
+    bounds: [610, 124, 122, 24]
+    content:
+      text: 货量覆盖率
+      style: $small
+      fontSize: 9
+      bold: true
+      align: [left, middle]
+  - elementId: p12-k2
+    elementType: shape
+    bounds: [758, 66, 148, 92]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-k2-n
+    elementType: text
+    bounds: [772, 78, 122, 44]
+    content:
+      text: '279'
+      style: $metric
+      fontSize: 24
+      align: [left, middle]
+  - elementId: p12-k2-l
+    elementType: text
+    bounds: [772, 124, 122, 24]
+    content:
+      text: 项自检通过
+      style: $small
+      fontSize: 9
+      bold: true
+      align: [left, middle]
+  - elementId: p12-div
+    elementType: line
+    bounds: [54, 262, 852, 1]
+    viewBox: [852, 1]
+    points: 0,0 852,0
+    border: {width: 0.8, color: $slate}
+  - elementId: p12-next-head
+    elementType: text
+    bounds: [54, 278, 852, 18]
+    content:
+      text: 如果继续做，下一步是这三件事
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1.2
+  - elementId: p12-n1
+    elementType: shape
+    bounds: [54, 304, 268, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-n1-t
+    elementType: text
+    bounds: [70, 316, 240, 20]
+    content:
+      text: 01 接通一个真实外部系统
+      style: $small
+      fontSize: 10.5
+      bold: true
+  - elementId: p12-n1-b
+    elementType: text
+    bounds: [70, 340, 240, 52]
+    content:
+      text: |-
+        先把 TMS 下发与结果回传打通，
+        验证集成层设计是否站得住。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p12-n2
+    elementType: shape
+    bounds: [346, 304, 268, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-n2-t
+    elementType: text
+    bounds: [362, 316, 240, 20]
+    content:
+      text: 02 接入真实路径规划
+      style: $small
+      fontSize: 10.5
+      bold: true
+  - elementId: p12-n2-b
+    elementType: text
+    bounds: [362, 340, 240, 52]
+    content:
+      text: |-
+        当前用「一趟最多 8 个门店」简化，
+        有地图路径矩阵后才能算真实里程成本。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p12-n3
+    elementType: shape
+    bounds: [638, 304, 268, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-n3-t
+    elementType: text
+    bounds: [654, 316, 240, 20]
+    content:
+      text: 03 补上求解质量的度量
+      style: $small
+      fontSize: 10.5
+      bold: true
+  - elementId: p12-n3-b
+    elementType: text
+    bounds: [654, 340, 240, 52]
+    content:
+      text: |-
+        现在只验硬约束是否满足，
+        还没有跟人工排车结果做对比基线。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p12-thanks
+    elementType: text
+    bounds: [54, 428, 852, 68]
+    content:
+      text: |-
+        感谢各位老师。
+        请提问。
+      style: $display
+      fontSize: 25
+      color: $yellow
+      lineHeight: 1.18
+  - elementId: p12-page
+    elementType: text
+    bounds: [872, 30, 34, 16]
+    content:
+      text: '12'
+      style: $small
+      fontSize: 9
+      color: $steel
+      bold: true
+      align: [right, top]

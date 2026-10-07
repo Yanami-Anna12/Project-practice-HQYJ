@@ -1,0 +1,94 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  60 秒。这一页是预备问答，挑最可能被问的五条讲。
+  如果时间紧，只讲前三条。
+  回答时先给结论，再给依据。
+elements:
+  - elementId: p11-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p11-code
+    elementType: text
+    bounds: [48, 32, 560, 16]
+    content:
+      style: $section
+      text: 10 / 关键取舍与预设问答
+  - elementId: p11-title
+    elementType: text
+    bounds: [48, 54, 864, 38]
+    content:
+      text: 每个偏离方案的决定，都有可核对的理由
+      style: $pageTitle
+  - elementId: p11-table
+    elementType: table
+    bounds: [48, 106, 864, 322]
+    style: $spec
+    columnWidths:
+      - 0.26
+      - 0.37
+      - 0.37
+    rowHeights:
+      - 0.166
+      - 0.166
+      - 0.166
+      - 0.168
+      - 0.166
+      - 0.168
+    rows:
+      - - text: 可能的提问
+        - text: 我们的回答
+        - text: 可核对的依据
+      - - text: 为什么没用 LangGraph 的 interrupt()？
+        - text: 它依赖检查点与执行中的图并发交互，在本机会触发原生崩溃，且进程内状态多 worker 无法共享。改用两阶段 + 数据库持久化状态。
+        - text: nodes.py:1442-1455 的工程取舍说明；确认记录落 ai_agent_task.confirmation。
+      - - text: LLM 到底用在哪？会不会算错？
+        - text: 只做方案解释、报告生成与语言表达。硬约束、子任务公式、可行性判定全部在代码里，模型算错也不影响方案。
+        - text: solver.py 的 validate_hard_constraints；work_order.py 的 calc_subtask_count。
+      - - text: 知识库只有 6 条，RAG 有意义吗？
+        - text: 检索链路是完整可用的（含中文 bigram 提升召回），但语料规模确实不足以支撑生产级诊断质量，需要导入真实资料后再评估。
+        - text: GET /api/v1/ai/knowledge/categories 实测 SOP 3 / 故障案例 2 / 设备手册 1。
+      - - text: 为什么默认 SQLite，方案写的是 PostgreSQL？
+        - text: SQLite 是为了开箱即跑、降低演示门槛。psycopg 驱动已安装，切换只需改 DATABASE_URL，模型层未使用任何方言。
+        - text: config.py 的 DATABASE_URL；.env 中保留 PostgreSQL 示例串。
+      - - text: 重排会不会死循环？
+        - text: 不会。重排有次数上限，达到上限转异常处理终止，整图固定 10 步内收敛；已完成子任务锁定不参与重排。
+        - text: graph.py:43 MAX_RELAX_RETRY = 2；nodes.py:1832-1851 的 locked_subtasks。
+  - elementId: p11-band
+    elementType: shape
+    bounds: [48, 444, 864, 44]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p11-band-t
+    elementType: text
+    bounds: [66, 450, 828, 32]
+    content:
+      text: 原则：偏离方案可以，但每一个偏离都要能说清原因，并且能当场核对。
+      style: $body
+      fontSize: 12.5
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p11-source
+    elementType: text
+    bounds: [48, 498, 864, 16]
+    content:
+      text: 其余预备问题（CPSAT 关闭后怎么办、权限并集口径、审计可否篡改、验证怎么重复跑）见答辩稿附录。
+      style: $small
+      fontSize: 7.5
+  - elementId: p11-page
+    elementType: text
+    bounds: [872, 498, 40, 16]
+    content:
+      text: '11'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, middle]

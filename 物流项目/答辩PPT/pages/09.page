@@ -1,0 +1,182 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  25 秒。这一页要主动讲，不要等老师问。9 大模块 6 个完整、3 个部分完成。
+  说完「编造的监控数据比没有监控更危险」，停一秒。
+elements:
+  - elementId: p09-top
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $risk}
+    border: {color: $risk, width: 0}
+  - elementId: p09-code
+    elementType: text
+    bounds: [54, 34, 560, 18]
+    content:
+      style: $section
+      text: 08 / 边界与已知限制
+  - elementId: p09-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 9 大模块：6 个完整落地，3 个如实标注
+      style: $pageTitle
+  - elementId: p09-done
+    elementType: shape
+    bounds: [54, 120, 414, 240]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p09-done-head
+    elementType: shape
+    bounds: [54, 120, 414, 28]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p09-done-label
+    elementType: text
+    bounds: [66, 125, 390, 20]
+    content:
+      text: 完整落地 / 6 个模块
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p09-done-list
+    elementType: text
+    bounds: [68, 162, 386, 186]
+    content:
+      text: |-
+        1  系统管理 —— 用户/角色/权限/字典/参数/附件/日志
+        2  基础数据与规则配置中心 —— 含规则版本发布与回滚
+        3  车辆分配管理 —— 可出勤车辆/配送需求/分配结果
+        4  智能调度 Agent —— 四方案比选/人工确认/幂等下发/异常重排
+        5  报表与看板 —— 5 类报表，ECharts 渲染
+        8  监控预警与异常处理 —— 真实指标 + 按数据推导的预警
+      style: $small
+      fontSize: 10
+      lineHeight: 1.85
+  - elementId: p09-gap
+    elementType: shape
+    bounds: [492, 120, 414, 240]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $risk, width: 1.5}
+  - elementId: p09-gap-head
+    elementType: shape
+    bounds: [492, 120, 414, 28]
+    shapeName: rect
+    fill: {type: solid, color: $risk}
+    border: {color: $risk, width: 0}
+  - elementId: p09-gap-label
+    elementType: text
+    bounds: [504, 125, 390, 20]
+    content:
+      text: 部分完成 / 3 个模块 —— 已如实标注
+      style: $label
+      fontSize: 9
+      color: $white
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p09-gap-1t
+    elementType: text
+    bounds: [506, 160, 386, 18]
+    content:
+      text: 6  移动端 / 司机端
+      style: $small
+      fontSize: 10
+      bold: true
+  - elementId: p09-gap-1b
+    elementType: text
+    bounds: [506, 180, 386, 34]
+    content:
+      text: |-
+        需求里定位为独立端，本机无法演示。
+        后端接口已就绪，未建独立前端工程。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p09-gap-2t
+    elementType: text
+    bounds: [506, 224, 386, 18]
+    content:
+      text: 7  接口集成与数据交换
+      style: $small
+      fontSize: 10
+      bold: true
+  - elementId: p09-gap-2b
+    elementType: text
+    bounds: [506, 244, 386, 34]
+    content:
+      text: |-
+        TMS/OMS/WMS/ERP/地图/GPS 全部未真实连通。
+        页面标 not_connected，并说明本地已落地哪些链路。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p09-gap-3t
+    elementType: text
+    bounds: [506, 288, 386, 18]
+    content:
+      text: 9  数据与算法平台
+      style: $small
+      fontSize: 10
+      bold: true
+  - elementId: p09-gap-3b
+    elementType: text
+    bounds: [506, 308, 386, 34]
+    content:
+      text: |-
+        求解器与规则中心已实现；
+        向量库与案例沉淀为规划项，未实现。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p09-extra-head
+    elementType: text
+    bounds: [54, 376, 852, 18]
+    content:
+      text: 另外四项主动说明的限制
+      style: $label
+      fontSize: 9
+      letterSpacing: 1
+  - elementId: p09-extra
+    elementType: text
+    bounds: [54, 398, 852, 82]
+    content:
+      text: |-
+        附件管理只登记元信息，不做真实文件落盘  ·  API QPS 与 P95 延迟需要 Prometheus 等外部组件，未引入，因此页面不展示这些数字
+        成本是相对系数（四米二 1.0 / 大包 0.85 / 小包 0.5），只用于方案间横向比较，不是真实金额  ·  路径规划用「一趟最多 8 个门店」简化，未接入真实地图
+      style: $small
+      fontSize: 9.5
+      lineHeight: 2
+  - elementId: p09-gate
+    elementType: shape
+    bounds: [54, 476, 852, 32]
+    shapeName: rect
+    fill: {type: solid, color: $risk}
+    border: {color: $risk, width: 0}
+  - elementId: p09-gate-text
+    elementType: text
+    bounds: [74, 478, 812, 28]
+    content:
+      text: 编造的监控数据，比没有监控更危险。
+      style: $body
+      fontSize: 14
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p09-page
+    elementType: text
+    bounds: [872, 30, 34, 16]
+    content:
+      text: '09'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, top]

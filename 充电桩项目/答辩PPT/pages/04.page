@@ -1,0 +1,454 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  45 秒。这一页讲 LangGraph 编排：18 个节点、11 条普通边、4 个条件分支。
+  重点讲两个工程难点：人工确认的两阶段实现、异常重排的循环上限。
+elements:
+  - elementId: p04-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p04-code
+    elementType: text
+    bounds: [48, 32, 560, 16]
+    content:
+      style: $section
+      text: 03 / AI 工作流编排
+  - elementId: p04-title
+    elementType: text
+    bounds: [48, 54, 864, 38]
+    content:
+      text: 18 个节点串成一条可挂起、可重排的流水线
+      style: $pageTitle
+  - elementId: p04-l1
+    elementType: text
+    bounds: [48, 104, 700, 16]
+    content:
+      text: 主链路静态边
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p04-c1
+    elementType: shape
+    bounds: [48, 126, 112, 48]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-c1-t
+    elementType: text
+    bounds: [54, 132, 100, 36]
+    content:
+      text: |-
+        load_task
+        载入任务
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-e1
+    elementType: line
+    bounds: [160, 150, 18, 1]
+    viewBox: [18, 1]
+    points: 0,0 18,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-c2
+    elementType: shape
+    bounds: [178, 126, 112, 48]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-c2-t
+    elementType: text
+    bounds: [184, 132, 100, 36]
+    content:
+      text: |-
+        data_perception
+        数据感知
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-e2
+    elementType: line
+    bounds: [290, 150, 18, 1]
+    viewBox: [18, 1]
+    points: 0,0 18,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-c3
+    elementType: shape
+    bounds: [308, 126, 112, 48]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-c3-t
+    elementType: text
+    bounds: [314, 132, 100, 36]
+    content:
+      text: |-
+        constraint_parse
+        约束解析
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-e3
+    elementType: line
+    bounds: [420, 150, 18, 1]
+    viewBox: [18, 1]
+    points: 0,0 18,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-c4
+    elementType: shape
+    bounds: [438, 126, 112, 48]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-c4-t
+    elementType: text
+    bounds: [444, 132, 100, 36]
+    content:
+      text: |-
+        rule_validation
+        规则校验 ◆
+      style: $small
+      fontSize: 8
+      color: $white
+      bold: true
+      align: [center, middle]
+  - elementId: p04-e4
+    elementType: line
+    bounds: [550, 150, 18, 1]
+    viewBox: [18, 1]
+    points: 0,0 18,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-c5
+    elementType: shape
+    bounds: [568, 126, 112, 48]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-c5-t
+    elementType: text
+    bounds: [574, 132, 100, 36]
+    content:
+      text: |-
+        work_order_
+        generation ◆
+      style: $small
+      fontSize: 8
+      color: $white
+      bold: true
+      align: [center, middle]
+  - elementId: p04-e5
+    elementType: line
+    bounds: [680, 150, 18, 1]
+    viewBox: [18, 1]
+    points: 0,0 18,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-c6
+    elementType: shape
+    bounds: [698, 126, 106, 48]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-c6-t
+    elementType: text
+    bounds: [704, 132, 94, 36]
+    content:
+      text: |-
+        task_scheduling
+        任务排程
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-e6
+    elementType: line
+    bounds: [804, 150, 14, 1]
+    viewBox: [14, 1]
+    points: 0,0 14,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-l2
+    elementType: text
+    bounds: [48, 190, 700, 16]
+    content:
+      text: 后续链路（含挂起点与重排回路）
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p04-d1
+    elementType: shape
+    bounds: [48, 212, 130, 48]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d1-t
+    elementType: text
+    bounds: [54, 218, 118, 36]
+    content:
+      text: |-
+        inspection_processing
+        巡检处理
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-e7
+    elementType: line
+    bounds: [178, 236, 16, 1]
+    viewBox: [16, 1]
+    points: 0,0 16,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-d2
+    elementType: shape
+    bounds: [194, 212, 130, 48]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d2-t
+    elementType: text
+    bounds: [200, 218, 118, 36]
+    content:
+      text: |-
+        fault_diagnosis
+        故障诊断
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-e8
+    elementType: line
+    bounds: [324, 236, 16, 1]
+    viewBox: [16, 1]
+    points: 0,0 16,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-d3
+    elementType: shape
+    bounds: [340, 212, 130, 48]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d3-t
+    elementType: text
+    bounds: [346, 218, 118, 36]
+    content:
+      text: |-
+        report_generation
+        报告生成
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-e9
+    elementType: line
+    bounds: [470, 236, 16, 1]
+    viewBox: [16, 1]
+    points: 0,0 16,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-d4
+    elementType: shape
+    bounds: [486, 212, 130, 48]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d4-t
+    elementType: text
+    bounds: [492, 218, 118, 36]
+    content:
+      text: |-
+        human_confirmation
+        ◆ 挂起待确认
+      style: $small
+      fontSize: 8
+      color: $white
+      bold: true
+      align: [center, middle]
+  - elementId: p04-e10
+    elementType: line
+    bounds: [616, 236, 16, 1]
+    viewBox: [16, 1]
+    points: 0,0 16,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-d5
+    elementType: shape
+    bounds: [632, 212, 172, 48]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d5-t
+    elementType: text
+    bounds: [638, 218, 160, 36]
+    content:
+      text: |-
+        dispatch_execution
+        确认后建单下发
+      style: $small
+      fontSize: 8
+      color: $white
+      bold: true
+      align: [center, middle]
+  - elementId: p04-d6
+    elementType: shape
+    bounds: [48, 284, 148, 44]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d6-t
+    elementType: text
+    bounds: [54, 290, 136, 32]
+    content:
+      text: |-
+        monitor_exception
+        异常监控
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-eA
+    elementType: line
+    bounds: [196, 306, 16, 1]
+    viewBox: [16, 1]
+    points: 0,0 16,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-d7
+    elementType: shape
+    bounds: [212, 284, 148, 44]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d7-t
+    elementType: text
+    bounds: [218, 290, 136, 32]
+    content:
+      text: |-
+        impact_analysis ◆
+        影响分析
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-eB
+    elementType: line
+    bounds: [360, 306, 16, 1]
+    viewBox: [16, 1]
+    points: 0,0 16,0
+    border: {width: 1.5, color: $ink}
+  - elementId: p04-d8
+    elementType: shape
+    bounds: [376, 284, 148, 44]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p04-d8-t
+    elementType: text
+    bounds: [382, 290, 136, 32]
+    content:
+      text: |-
+        replan / plan_scoring
+        重排与评分
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-loop
+    elementType: shape
+    bounds: [540, 284, 240, 44]
+    shapeName: rect
+    fill: {type: solid, color: $accentPale}
+    border: {color: $accent, width: 1.2}
+  - elementId: p04-loop-t
+    elementType: text
+    bounds: [550, 290, 220, 32]
+    content:
+      text: |-
+        relax_constraints → exception_handler
+        失败时放宽，最多重试 2 次
+      style: $small
+      fontSize: 8
+      color: $ink
+      align: [center, middle]
+  - elementId: p04-note-head
+    elementType: text
+    bounds: [48, 346, 864, 16]
+    content:
+      text: 两个工程难点
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p04-n1
+    elementType: shape
+    bounds: [48, 368, 424, 116]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p04-n1-t
+    elementType: text
+    bounds: [62, 380, 396, 20]
+    content:
+      text: 01 人工确认为什么不用 LangGraph 的 interrupt()
+      style: $small
+      fontSize: 9.5
+      color: $ink
+      bold: true
+  - elementId: p04-n1-b
+    elementType: text
+    bounds: [62, 404, 396, 70]
+    content:
+      text: |-
+        interrupt() 依赖检查点与正在执行的图并发交互，
+        在本机环境下会触发原生崩溃；且进程内状态在多
+        worker 部署下无法共享。改为两阶段：阶段一跑到该
+        节点即停，状态存进 ai_agent_task；调用 /confirm 时
+        把确认结果注入初始状态重跑整图。可横向扩展、可审计。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p04-n2
+    elementType: shape
+    bounds: [488, 368, 424, 116]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p04-n2-t
+    elementType: text
+    bounds: [502, 380, 396, 20]
+    content:
+      text: 02 重排循环为什么必须设上限
+      style: $small
+      fontSize: 9.5
+      color: $ink
+      bold: true
+  - elementId: p04-n2-b
+    elementType: text
+    bounds: [502, 404, 396, 70]
+    content:
+      text: |-
+        当所有候选方案都不满足约束时，work_order_generation
+        与 relax_constraints 会互相触发。早期版本没有上限，
+        警告列表每轮翻倍，最终耗尽内存。
+        现在用 relax_count 计数，达到 2 次即转 exception_handler
+        终止，整图固定 10 步内收敛。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p04-source
+    elementType: text
+    bounds: [48, 494, 820, 16]
+    content:
+      text: 依据：graph.py 注册 18 个节点、19 条边语句展开为 25 条具体边、5 组条件边、MAX_RELAX_RETRY = 2（第 43 行）；nodes.py 23 个顶层函数（17 个节点函数 + 6 个辅助函数）。
+      style: $small
+      fontSize: 7.5
+  - elementId: p04-page
+    elementType: text
+    bounds: [872, 494, 40, 16]
+    content:
+      text: '04'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, middle]

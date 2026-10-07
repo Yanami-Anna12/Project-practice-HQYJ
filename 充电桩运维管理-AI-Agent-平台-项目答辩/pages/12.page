@@ -1,0 +1,202 @@
+pageType: closing
+background:
+  type: solid
+  color: $ink
+notes: |
+  收尾 20 秒。念完定位句，停两秒，然后致谢。
+  让老师看清这三个数字。
+elements:
+  - elementId: p12-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p12-code
+    elementType: text
+    bounds: [48, 40, 560, 16]
+    content:
+      style: $section
+      text: 11 / 总结
+  - elementId: p12-title
+    elementType: text
+    bounds: [48, 64, 520, 96]
+    content:
+      text: |-
+        把运维规则
+        搬进代码
+      style: $display
+      fontSize: 32
+      color: $white
+      lineHeight: 1.2
+  - elementId: p12-sub
+    elementType: text
+    bounds: [48, 172, 500, 74]
+    content:
+      text: |-
+        可配置 —— 频率、SLA、权重都在规则中心，可发版可回滚
+        可解释 —— 每套方案带评分与推荐理由，LLM 只做表达
+        可追溯 —— 确认记录、节点追踪、审计日志全部落库
+      style: $body
+      fontSize: 11.5
+      color: $steel
+      lineHeight: 1.8
+  - elementId: p12-k1
+    elementType: shape
+    bounds: [596, 64, 148, 92]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p12-k1-n
+    elementType: text
+    bounds: [610, 76, 122, 44]
+    content:
+      text: '182'
+      style: $metric
+      fontSize: 24
+      color: $white
+      align: [left, middle]
+  - elementId: p12-k1-l
+    elementType: text
+    bounds: [610, 122, 122, 24]
+    content:
+      text: 项验证通过
+      style: $small
+      fontSize: 8.5
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p12-k2
+    elementType: shape
+    bounds: [758, 64, 148, 92]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-k2-n
+    elementType: text
+    bounds: [772, 76, 122, 44]
+    content:
+      text: '103'
+      style: $metric
+      fontSize: 24
+      align: [left, middle]
+  - elementId: p12-k2-l
+    elementType: text
+    bounds: [772, 122, 122, 24]
+    content:
+      text: 个接口
+      style: $small
+      fontSize: 8.5
+      bold: true
+      align: [left, middle]
+  - elementId: p12-div
+    elementType: line
+    bounds: [48, 252, 864, 1]
+    viewBox: [864, 1]
+    points: 0,0 864,0
+    border: {width: 0.8, color: $steel}
+  - elementId: p12-next-head
+    elementType: text
+    bounds: [48, 268, 864, 16]
+    content:
+      text: 如果继续做，下一步是这三件事
+      style: $label
+      fontSize: 8.5
+      color: $accentPale
+      letterSpacing: 1.2
+  - elementId: p12-n1
+    elementType: shape
+    bounds: [48, 292, 272, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-n1-t
+    elementType: text
+    bounds: [62, 304, 244, 20]
+    content:
+      text: 01 导入真实运维知识
+      style: $small
+      fontSize: 9.5
+      bold: true
+  - elementId: p12-n1-b
+    elementType: text
+    bounds: [62, 328, 244, 52]
+    content:
+      text: |-
+        现在只有 6 条演示数据。
+        有了真实 SOP 与故障案例，
+        才能评估诊断质量。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p12-n2
+    elementType: shape
+    bounds: [344, 292, 272, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-n2-t
+    elementType: text
+    bounds: [358, 304, 244, 20]
+    content:
+      text: 02 接通一个外部平台
+      style: $small
+      fontSize: 9.5
+      bold: true
+  - elementId: p12-n2-b
+    elementType: text
+    bounds: [358, 328, 244, 52]
+    content:
+      text: |-
+        优先接充电桩平台或储能
+        平台，验证集成层设计是
+        否站得住。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p12-n3
+    elementType: shape
+    bounds: [640, 292, 272, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p12-n3-t
+    elementType: text
+    bounds: [654, 304, 244, 20]
+    content:
+      text: 03 清理过期表述并补文档
+      style: $small
+      fontSize: 9.5
+      bold: true
+  - elementId: p12-n3-b
+    elementType: text
+    bounds: [654, 328, 244, 52]
+    content:
+      text: |-
+        代码里还留有几处「interrupt」
+        旧注释；测试报告、用户手册、
+        运维手册需要单独成文。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p12-thanks
+    elementType: text
+    bounds: [48, 412, 864, 66]
+    content:
+      text: |-
+        感谢各位老师。
+        请提问。
+      style: $display
+      fontSize: 24
+      color: $accentPale
+      lineHeight: 1.2
+  - elementId: p12-page
+    elementType: text
+    bounds: [872, 28, 40, 16]
+    content:
+      text: '12'
+      style: $small
+      fontSize: 9
+      color: $steel
+      bold: true
+      align: [right, top]

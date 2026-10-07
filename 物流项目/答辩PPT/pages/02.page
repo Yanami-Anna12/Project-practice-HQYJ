@@ -1,0 +1,267 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  30 秒。三个模块分别是「问题规模」「方案产出」「工程可信度」。
+  重点念清 40 台车、16 门店、279 项验证。
+  收尾句：人做决策，机器做计算。
+elements:
+  - elementId: p02-rail
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p02-code
+    elementType: text
+    bounds: [54, 34, 500, 18]
+    content:
+      style: $section
+      text: 01 / 项目一句话
+  - elementId: p02-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 把排车从手工劳动，变成「选方案」
+      style: $pageTitle
+  - elementId: p02-m1
+    elementType: shape
+    bounds: [54, 122, 268, 244]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p02-m1-head
+    elementType: shape
+    bounds: [54, 122, 268, 26]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p02-m1-label
+    elementType: text
+    bounds: [66, 126, 244, 18]
+    content:
+      text: 问题规模 / SCALE
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p02-m1-metric
+    elementType: text
+    bounds: [66, 158, 244, 50]
+    content:
+      text: 40 台
+      style: $metric
+      fontSize: 40
+  - elementId: p02-m1-unit
+    elementType: text
+    bounds: [66, 210, 244, 18]
+    content:
+      text: 四米二 28 · 大包 3 · 小包 9
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p02-m1-note
+    elementType: shape
+    bounds: [66, 240, 244, 46]
+    shapeName: rect
+    fill: {type: solid, color: $yellowPale}
+    border: {color: $yellowPale, width: 0}
+  - elementId: p02-m1-note-text
+    elementType: text
+    bounds: [76, 248, 224, 34]
+    content:
+      text: |-
+        16 个门店 · 5 条线路 · 19 条映射
+        门店与线路是多对多关系
+      style: $small
+      fontSize: 9
+  - elementId: p02-m1-foot
+    elementType: text
+    bounds: [66, 300, 244, 56]
+    content:
+      text: |-
+        8 条业务约束互相顶：装载量、上下午
+        时段、地形通行、线路归属同时生效。
+      style: $small
+      fontSize: 10
+  - elementId: p02-arrow-1
+    elementType: shape
+    bounds: [326, 232, 14, 24]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p02-m2
+    elementType: shape
+    bounds: [348, 122, 268, 244]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p02-m2-head
+    elementType: shape
+    bounds: [348, 122, 268, 26]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p02-m2-label
+    elementType: text
+    bounds: [360, 126, 244, 18]
+    content:
+      text: 方案产出 / OUTPUT
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p02-m2-metric
+    elementType: text
+    bounds: [360, 158, 244, 50]
+    content:
+      text: 4 套
+      style: $metric
+      fontSize: 40
+  - elementId: p02-m2-unit
+    elementType: text
+    bounds: [360, 210, 244, 18]
+    content:
+      text: A 四米二优先 · B 成本最低
+      style: $body
+      fontSize: 12
+      bold: true
+  - elementId: p02-m2-note
+    elementType: shape
+    bounds: [360, 240, 244, 46]
+    shapeName: rect
+    fill: {type: solid, color: $yellowPale}
+    border: {color: $yellowPale, width: 0}
+  - elementId: p02-m2-note-text
+    elementType: text
+    bounds: [370, 248, 224, 34]
+    content:
+      text: |-
+        每套带评分与推荐理由
+        人工确认后才下发
+      style: $small
+      fontSize: 9
+  - elementId: p02-m2-foot
+    elementType: text
+    bounds: [360, 300, 244, 56]
+    content:
+      text: |-
+        C 大包小包保障 · D 装载率均衡。
+        四套并排比选，调度员做决策。
+      style: $small
+      fontSize: 10
+  - elementId: p02-arrow-2
+    elementType: shape
+    bounds: [620, 232, 14, 24]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p02-m3
+    elementType: shape
+    bounds: [642, 122, 264, 244]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p02-m3-head
+    elementType: shape
+    bounds: [642, 122, 264, 26]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p02-m3-label
+    elementType: text
+    bounds: [654, 126, 240, 18]
+    content:
+      text: 工程可信度 / VERIFIED
+      style: $label
+      fontSize: 9
+      color: $graphite
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p02-m3-metric
+    elementType: text
+    bounds: [654, 158, 240, 50]
+    content:
+      text: 279 项
+      style: $metric
+      fontSize: 40
+      color: $yellow
+  - elementId: p02-m3-unit
+    elementType: text
+    bounds: [654, 210, 240, 18]
+    content:
+      text: 后端 173 + 前端 106
+      style: $body
+      fontSize: 12
+      bold: true
+      color: $white
+  - elementId: p02-m3-note
+    elementType: shape
+    bounds: [654, 240, 240, 46]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $surface, width: 0}
+  - elementId: p02-m3-note-text
+    elementType: text
+    bounds: [664, 248, 220, 34]
+    content:
+      text: |-
+        全部可重复执行
+        浏览器控制台错误 0 条
+      style: $small
+      fontSize: 9
+  - elementId: p02-m3-foot
+    elementType: text
+    bounds: [654, 300, 240, 56]
+    content:
+      text: |-
+        9 大模块：6 个完整落地、
+        3 个部分完成并如实标注。
+      style: $small
+      fontSize: 10
+      color: $steel
+  - elementId: p02-gate
+    elementType: shape
+    bounds: [54, 396, 852, 56]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p02-gate-label
+    elementType: text
+    bounds: [74, 410, 160, 28]
+    content:
+      text: 项目定位
+      style: $label
+      fontSize: 9
+      color: $graphite
+      letterSpacing: 0.8
+      align: [left, middle]
+  - elementId: p02-gate-text
+    elementType: text
+    bounds: [212, 406, 676, 36]
+    content:
+      text: 把调度员的经验固化成规则，让人做决策、机器做计算。
+      style: $body
+      fontSize: 15
+      bold: true
+      align: [left, middle]
+  - elementId: p02-source
+    elementType: text
+    bounds: [54, 496, 700, 16]
+    content:
+      text: 数据来源：需求文档《车辆智能调度 Agent》1.3 现有条件 / 1.4 核心业务约束；本机实测数据
+      style: $small
+      fontSize: 8
+  - elementId: p02-page
+    elementType: text
+    bounds: [872, 496, 34, 16]
+    content:
+      text: '02'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, middle]

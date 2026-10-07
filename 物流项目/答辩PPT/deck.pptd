@@ -1,0 +1,105 @@
+version: v2
+title: 车辆智能调度 Agent 项目答辩
+size:
+  - 960
+  - 540
+template:
+  id: dsh-work-curated-modular-logistics-system
+  name: Modular Logistics System
+theme:
+  colors:
+    paper: '#F2F2EE'
+    surface: '#FFFFFF'
+    graphite: '#202224'
+    slate: '#60666A'
+    grid: '#D9DCD8'
+    yellow: '#FFD400'
+    yellowPale: '#FFF3A6'
+    steel: '#AEB4B5'
+    risk: '#C84B31'
+    white: '#FFFFFF'
+  textStyles:
+    display:
+      fontFamily: &ref_0
+        latin: Arial
+        ea: Microsoft YaHei
+        mac: PingFang SC
+        win: Microsoft YaHei
+      fontSize: 44
+      color: $graphite
+      bold: true
+      lineHeight: 1.08
+    pageTitle:
+      fontFamily: *ref_0
+      fontSize: 26
+      color: $graphite
+      bold: true
+      lineHeight: 1.12
+    section:
+      fontFamily: *ref_0
+      fontSize: 10
+      color: $slate
+      bold: true
+      letterSpacing: 1.4
+    body:
+      fontFamily: &ref_1
+        latin: Arial
+        ea: Microsoft YaHei
+        mac: PingFang SC
+        win: Microsoft YaHei
+      fontSize: 13
+      color: $graphite
+      lineHeight: 1.34
+    small:
+      fontFamily: *ref_1
+      fontSize: 9
+      color: $slate
+      lineHeight: 1.24
+    metric:
+      fontFamily: *ref_0
+      fontSize: 38
+      color: $graphite
+      bold: true
+    label:
+      fontFamily: *ref_1
+      fontSize: 9
+      color: $graphite
+      bold: true
+      letterSpacing: 1
+  tableStyles:
+    operations:
+      cellStyle:
+        fontFamily: *ref_1
+        fontSize: 10
+        color: $graphite
+        fill:
+          type: solid
+          color: $surface
+        border:
+          width: 0.8
+          color: $grid
+        align:
+          - left
+          - middle
+      firstRowStyle:
+        fill:
+          type: solid
+          color: $graphite
+        color: $white
+        bold: true
+        align:
+          - center
+          - middle
+pages:
+  - pages/01.page
+  - pages/02.page
+  - pages/03.page
+  - pages/04.page
+  - pages/05.page
+  - pages/06.page
+  - pages/07.page
+  - pages/08.page
+  - pages/09.page
+  - pages/10.page
+  - pages/11.page
+  - pages/12.page

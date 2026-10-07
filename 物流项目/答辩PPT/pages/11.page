@@ -1,0 +1,90 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  60 秒。这一页是预备问答，挑最可能被问的四个讲。
+  如果时间紧，只讲第 1 条和第 4 条。
+  回答时先给结论，再给依据，不要绕。
+elements:
+  - elementId: p11-top
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p11-code
+    elementType: text
+    bounds: [54, 34, 560, 18]
+    content:
+      style: $section
+      text: 10 / 关键取舍与预设问答
+  - elementId: p11-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 每个偏离文档的决定，都有可核对的理由
+      style: $pageTitle
+  - elementId: p11-table
+    elementType: table
+    bounds: [54, 118, 852, 330]
+    style: $operations
+    columnWidths:
+      - 0.26
+      - 0.37
+      - 0.37
+    rowHeights:
+      - 0.16
+      - 0.21
+      - 0.21
+      - 0.21
+      - 0.21
+    rows:
+      - - text: 可能的提问
+        - text: 我们的回答
+        - text: 可核对的依据
+      - - text: 为什么用 MySQL，文档写的是 PostgreSQL？
+        - text: 本机没有 PG，Docker 守护进程也没起。代码里没有使用任何 MySQL 方言。
+        - text: 换 PG 只需改 config.py 的 drivername 一行，模型无需改动。
+      - - text: LLM 到底用在哪？
+        - text: 只做方案解释与报告生成。硬约束绝不交给 LLM，算错也不影响方案可行性。
+        - text: LangGraph 节点已就位；LLM 不可用时降级为规则引擎输出。
+      - - text: 允许拆单是不是在回避难点？
+        - text: 恰恰相反。拆单把问题变成「货量单元 → 趟次槽位」的分配问题，建模更难。
+        - text: 2290 超过 800 是物理约束，不拆就是 25% 覆盖率。
+      - - text: 测试是怎么做的？
+        - text: 后端 6 个脚本 173 项，前端 5 个脚本 106 项，共 279 项，全部可重复执行。
+        - text: 前端用 Playwright 驱动本机 Chrome，同时收集控制台报错。
+  - elementId: p11-gate
+    elementType: shape
+    bounds: [54, 462, 852, 44]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p11-gate-text
+    elementType: text
+    bounds: [74, 468, 812, 32]
+    content:
+      text: 原则：偏离文档可以，但每一个偏离都要能说清原因，并且能当场核对。
+      style: $body
+      fontSize: 13
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p11-source
+    elementType: text
+    bounds: [54, 514, 852, 16]
+    content:
+      text: 其余预备问题（成本口径、覆盖率为何 99.8% 而非 100%、哪些没做）见答辩稿附录
+      style: $small
+      fontSize: 8
+  - elementId: p11-page
+    elementType: text
+    bounds: [872, 30, 34, 16]
+    content:
+      text: '11'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, top]

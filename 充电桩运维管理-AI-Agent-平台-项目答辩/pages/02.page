@@ -1,0 +1,334 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  30 秒。五个数字立住规模与验证。念准 29392 行、32 张表、103 个接口、8 类 Agent、198 项验证。
+  收尾句：硬约束代码化，LLM 只负责解释。
+elements:
+  - elementId: p02-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p02-code
+    elementType: text
+    bounds: [48, 32, 560, 16]
+    content:
+      style: $section
+      text: 01 / 一句话与五个数字
+  - elementId: p02-title
+    elementType: text
+    bounds: [48, 54, 864, 38]
+    content:
+      text: 全栈自建，规则可配置，AI 在约束之内工作
+      style: $pageTitle
+  - elementId: p02-k1
+    elementType: shape
+    bounds: [48, 112, 160, 96]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p02-k1-n
+    elementType: text
+    bounds: [62, 124, 132, 40]
+    content:
+      text: '29392'
+      style: $metric
+      fontSize: 30
+      color: $accentPale
+  - elementId: p02-k1-l
+    elementType: text
+    bounds: [62, 166, 132, 16]
+    content:
+      text: 行代码
+      style: $small
+      fontSize: 9
+      color: $white
+      bold: true
+  - elementId: p02-k1-note
+    elementType: text
+    bounds: [62, 184, 132, 16]
+    content:
+      text: 后端 17502 / 前端 11890
+      style: $small
+      fontSize: 7.5
+      color: $steel
+  - elementId: p02-k2
+    elementType: shape
+    bounds: [220, 112, 160, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p02-k2-n
+    elementType: text
+    bounds: [234, 124, 132, 40]
+    content:
+      text: '32'
+      style: $metric
+      fontSize: 30
+  - elementId: p02-k2-l
+    elementType: text
+    bounds: [234, 166, 132, 16]
+    content:
+      text: 张数据表
+      style: $small
+      fontSize: 9
+      bold: true
+  - elementId: p02-k2-note
+    elementType: text
+    bounds: [234, 184, 132, 16]
+    content:
+      text: SQLite 默认 / PostgreSQL 可切
+      style: $small
+      fontSize: 7.5
+  - elementId: p02-k3
+    elementType: shape
+    bounds: [392, 112, 160, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p02-k3-n
+    elementType: text
+    bounds: [406, 124, 132, 40]
+    content:
+      text: '103'
+      style: $metric
+      fontSize: 30
+  - elementId: p02-k3-l
+    elementType: text
+    bounds: [406, 166, 132, 16]
+    content:
+      text: 个接口
+      style: $small
+      fontSize: 9
+      bold: true
+  - elementId: p02-k3-note
+    elementType: text
+    bounds: [406, 184, 132, 16]
+    content:
+      text: AI 29 / 后台 23 / 工单 15
+      style: $small
+      fontSize: 7.5
+  - elementId: p02-k4
+    elementType: shape
+    bounds: [564, 112, 160, 96]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p02-k4-n
+    elementType: text
+    bounds: [578, 124, 132, 40]
+    content:
+      text: '8'
+      style: $metric
+      fontSize: 30
+  - elementId: p02-k4-l
+    elementType: text
+    bounds: [578, 166, 132, 16]
+    content:
+      text: 类 AI Agent
+      style: $small
+      fontSize: 9
+      bold: true
+  - elementId: p02-k4-note
+    elementType: text
+    bounds: [578, 184, 132, 16]
+    content:
+      text: 18 节点 LangGraph 编排
+      style: $small
+      fontSize: 7.5
+  - elementId: p02-k5
+    elementType: shape
+    bounds: [736, 112, 176, 96]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p02-k5-n
+    elementType: text
+    bounds: [750, 124, 148, 40]
+    content:
+      text: '182'
+      style: $metric
+      fontSize: 30
+      color: $white
+  - elementId: p02-k5-l
+    elementType: text
+    bounds: [750, 166, 148, 16]
+    content:
+      text: 项验证全部通过
+      style: $small
+      fontSize: 9
+      color: $white
+      bold: true
+  - elementId: p02-k5-note
+    elementType: text
+    bounds: [750, 184, 148, 16]
+    content:
+      text: 冒烟 96 / 联调 54 / 前端 32
+      style: $small
+      fontSize: 7.5
+      color: $accentPale
+  - elementId: p02-div
+    elementType: line
+    bounds: [48, 232, 864, 1]
+    viewBox: [864, 1]
+    points: 0,0 864,0
+    border: {width: 0.8, color: $rule}
+  - elementId: p02-l1
+    elementType: text
+    bounds: [48, 250, 864, 18]
+    content:
+      text: 平台覆盖的四条业务主线
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p02-m1
+    elementType: shape
+    bounds: [48, 274, 204, 108]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p02-m1-t
+    elementType: text
+    bounds: [62, 286, 176, 20]
+    content:
+      text: 巡检
+      style: $body
+      fontSize: 13
+      bold: true
+  - elementId: p02-m1-b
+    elementType: text
+    bounds: [62, 312, 176, 62]
+    content:
+      text: |-
+        巡视 / 设备检查 / 其他 /
+        特巡 / 消缺五类工单，
+        子任务数量按公式计算，
+        照规则来，不靠估。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p02-m2
+    elementType: shape
+    bounds: [268, 274, 204, 108]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p02-m2-t
+    elementType: text
+    bounds: [282, 286, 176, 20]
+    content:
+      text: 工单
+      style: $body
+      fontSize: 13
+      bold: true
+  - elementId: p02-m2-b
+    elementType: text
+    bounds: [282, 312, 176, 62]
+    content:
+      text: |-
+        状态机约束流转，
+        非法迁移直接拦截。
+        多方案比选后由人工
+        确认才下发。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p02-m3
+    elementType: shape
+    bounds: [488, 274, 204, 108]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p02-m3-t
+    elementType: text
+    bounds: [502, 286, 176, 20]
+    content:
+      text: 故障
+      style: $body
+      fontSize: 13
+      bold: true
+  - elementId: p02-m3-b
+    elementType: text
+    bounds: [502, 312, 176, 62]
+    content:
+      text: |-
+        草稿、上报、核查三段闭环。
+        高风险关键词自动判定等级。
+        照片多图上传并绑定单据。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p02-m4
+    elementType: shape
+    bounds: [708, 274, 204, 108]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p02-m4-t
+    elementType: text
+    bounds: [722, 286, 176, 20]
+    content:
+      text: 报告
+      style: $body
+      fontSize: 13
+      bold: true
+  - elementId: p02-m4-b
+    elementType: text
+    bounds: [722, 312, 176, 62]
+    content:
+      text: |-
+        日 / 周 / 月 / 即时四类。
+        六大内容模块固定，
+        支持追问下钻与历史对比。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p02-band
+    elementType: shape
+    bounds: [48, 404, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p02-band-label
+    elementType: text
+    bounds: [66, 418, 140, 26]
+    content:
+      text: 关键设计
+      style: $label
+      fontSize: 8.5
+      color: $accentPale
+      letterSpacing: 0.8
+      align: [left, middle]
+  - elementId: p02-band-text
+    elementType: text
+    bounds: [200, 414, 696, 34]
+    content:
+      text: 如果一个约束算错会导致方案不可行，它就必须写在代码里 —— 不交给模型判断。
+      style: $body
+      fontSize: 13
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p02-source
+    elementType: text
+    bounds: [48, 470, 800, 26]
+    content:
+      text: |-
+        数据来源：本机实测。代码行数由脚本统计 backend/app 下 .py 与 frontend/src 下 .vue/.js/.css；接口数取自 GET /openapi.json；
+        验证数为三套脚本报告（backend/smoke_report.txt 96 + verify_live.py 54 + verify_frontend.py 32 = 182）。
+      style: $small
+      fontSize: 7.5
+      lineHeight: 1.5
+  - elementId: p02-page
+    elementType: text
+    bounds: [872, 500, 40, 16]
+    content:
+      text: '02'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, middle]

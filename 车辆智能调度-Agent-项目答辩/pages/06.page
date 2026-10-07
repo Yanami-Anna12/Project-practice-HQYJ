@@ -1,0 +1,287 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  30 秒。用一条流水线把「从数据到下发」讲清楚，节点名称对应代码里的真实节点。
+  重点说两个工程细节：下发幂等、异常重排有次数上限。
+elements:
+  - elementId: p06-top
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p06-code
+    elementType: text
+    bounds: [54, 34, 500, 18]
+    content:
+      style: $section
+      text: 05 / 调度全流程
+  - elementId: p06-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 从货量数据到派车指令，一条链路走到底
+      style: $pageTitle
+  - elementId: p06-n1
+    elementType: shape
+    bounds: [54, 132, 136, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-n1-tag
+    elementType: shape
+    bounds: [54, 132, 136, 9]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n1-text
+    elementType: text
+    bounds: [62, 146, 120, 44]
+    content:
+      text: |-
+        01 数据感知
+        货量 · 车辆 · 限制
+      style: $small
+      fontSize: 9
+      align: [center, middle]
+  - elementId: p06-a1
+    elementType: shape
+    bounds: [196, 158, 14, 10]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n2
+    elementType: shape
+    bounds: [216, 132, 136, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-n2-tag
+    elementType: shape
+    bounds: [216, 132, 136, 9]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n2-text
+    elementType: text
+    bounds: [224, 146, 120, 44]
+    content:
+      text: |-
+        02 约束解析
+        8 条业务规则
+      style: $small
+      fontSize: 9
+      align: [center, middle]
+  - elementId: p06-a2
+    elementType: shape
+    bounds: [358, 158, 14, 10]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n3
+    elementType: shape
+    bounds: [378, 132, 136, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-n3-tag
+    elementType: shape
+    bounds: [378, 132, 136, 9]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n3-text
+    elementType: text
+    bounds: [386, 146, 120, 44]
+    content:
+      text: |-
+        03 规则校验
+        版本化配置生效
+      style: $small
+      fontSize: 9
+      align: [center, middle]
+  - elementId: p06-a3
+    elementType: shape
+    bounds: [520, 158, 14, 10]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n4
+    elementType: shape
+    bounds: [540, 132, 136, 62]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-n4-text
+    elementType: text
+    bounds: [548, 146, 120, 44]
+    content:
+      text: |-
+        04 方案生成
+        四套方案 + 评分
+      style: $small
+      fontSize: 9
+      bold: true
+      align: [center, middle]
+  - elementId: p06-a4
+    elementType: shape
+    bounds: [682, 158, 14, 10]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n5
+    elementType: shape
+    bounds: [702, 132, 96, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-n5-tag
+    elementType: shape
+    bounds: [702, 132, 96, 9]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n5-text
+    elementType: text
+    bounds: [708, 146, 84, 44]
+    content:
+      text: |-
+        05 人工确认
+        调度员选方案
+      style: $small
+      fontSize: 9
+      align: [center, middle]
+  - elementId: p06-a5
+    elementType: shape
+    bounds: [804, 158, 14, 10]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-n6
+    elementType: shape
+    bounds: [824, 132, 82, 62]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-n6-text
+    elementType: text
+    bounds: [830, 146, 70, 44]
+    content:
+      text: |-
+        06 下发
+        幂等 · 可追溯
+      style: $small
+      fontSize: 9
+      color: $white
+      bold: true
+      align: [center, middle]
+  - elementId: p06-d1
+    elementType: shape
+    bounds: [54, 226, 414, 116]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-d1-head
+    elementType: shape
+    bounds: [54, 226, 414, 25]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-d1-label
+    elementType: text
+    bounds: [66, 230, 390, 18]
+    content:
+      text: 工程细节 01 / 下发幂等
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p06-d1-body
+    elementType: text
+    bounds: [66, 260, 390, 74]
+    content:
+      text: |-
+        dispatch_record 上 (task_id, plan_id, trip_id) 建唯一约束。
+        重复点「下发」返回「新增 0、跳过 47」，不会产生重复任务。
+        页面演示时故意连点两次，就是这个效果。
+      style: $small
+      fontSize: 10
+      lineHeight: 1.55
+  - elementId: p06-d2
+    elementType: shape
+    bounds: [492, 226, 414, 116]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p06-d2-head
+    elementType: shape
+    bounds: [492, 226, 414, 25]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p06-d2-label
+    elementType: text
+    bounds: [504, 230, 390, 18]
+    content:
+      text: 工程细节 02 / 异常重排
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p06-d2-body
+    elementType: text
+    bounds: [504, 260, 390, 74]
+    content:
+      text: |-
+        车辆故障、门店加减货可上报异常触发重排。
+        已执行过的趟次锁死不动；重排次数有上限（默认 3 次），
+        连点到上限会明确拒绝，避免死循环。
+      style: $small
+      fontSize: 10
+      lineHeight: 1.55
+  - elementId: p06-gate
+    elementType: shape
+    bounds: [54, 362, 852, 54]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p06-gate-label
+    elementType: text
+    bounds: [74, 376, 150, 26]
+    content:
+      text: 关键取舍
+      style: $label
+      fontSize: 9
+      color: $graphite
+      letterSpacing: 0.8
+      align: [left, middle]
+  - elementId: p06-gate-text
+    elementType: text
+    bounds: [212, 372, 676, 34]
+    content:
+      text: 机器负责算，人负责决定。方案不自动执行，必须经调度员确认才下发。
+      style: $body
+      fontSize: 14
+      bold: true
+      align: [left, middle]
+  - elementId: p06-source
+    elementType: text
+    bounds: [54, 496, 760, 16]
+    content:
+      text: 节点名称对应 backend/app/services/solver.py 与 LangGraph 工作流；重排上限见 .env 的 REPLAN_MAX_COUNT
+      style: $small
+      fontSize: 8
+  - elementId: p06-page
+    elementType: text
+    bounds: [872, 496, 34, 16]
+    content:
+      text: '06'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, middle]

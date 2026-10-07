@@ -1,0 +1,846 @@
+
+===== PAGE 1 =====
+
+充电桩运维管理 AI Agent 项目技术方案
+一、项目背景与目标
+1.1 业务背景
+本项目面向充电桩/储能电站运维场景，覆盖工单管理、故障管理、作业管理、台账管理、角色权限、
+用户管理、消息中心、统计分析与运维分析建议报告等业务。系统需要根据每日巡检计划、故障上报、
+设备状态、告警事件、运维人员排班、站点分布、地形与资产台账等条件，智能生成工单、子任务、巡
+检计划、故障核查任务与运维分析报告，输出可执行的运维方案与建议。
+系统包含小程序端、管理后台、员工端，并融入 AI Agent 能力，实现从数据感知、任务生成、工单下
+发、巡检执行、故障诊断、报告生成到异常重排的全流程自动化。
+1.2 核心业务需求
+1. 工单管理：工单首页、工单申请、工单处理、待完成子任务、巡检中、巡检情况录入、巡检详情、
+工单导出、消息推送、定时任务检测、分权限显示。
+2. 故障管理：故障首页、故障上报、故障核查、故障统计、故障卡片、故障等级与状态。
+3. 作业管理：作业任务列表、复杂模糊查询、任务卡片展示。
+4. 台账管理：站台台账、充电桩台账、复杂查询、信息导出。
+5. 角色与用户管理：角色管理、用户管理、数据权限（个人/站点/项目/平台）、菜单权限、用户新
+增、用户编辑、微信授权手机号登录。
+6. 消息中心：消息卡片、消息类型区分、消息详情、工单退回/紧急/逾期/取消提醒。
+7. 统计分析：工单统计、完成率、逾期率、图表展示、项目工单排名、站点消缺工单排名、数据导
+出。
+8. 二期扩展：充电枪数量显示、站点导航、地图跳转分享、灭火器字段修改、摄像头字段修改。
+9. 运维分析建议报告 Agent：日运营简报、周运维分析、月度深度报告、即时分析运营报告，支持
+飞书/邮件/站内信推送、追问下钻、历史对比。
+10. AI Agent 中心：智能工单调度、智能故障诊断、智能巡检报告、智能运维建议、智能风控、智能
+报告、智能数据分析、智能编排。
+1.3 AI Agent 融入目标
+在传统运维管理系统基础上，融入 AI Agent 开发元素，实现：
+1. 建立基础数据与规则配置中心，实现业务规则可配置、可版本化。
+2. 构建 AI Agent 中心，实现智能工单调度、智能故障诊断、智能巡检报告、智能运维建议、智能风
+控、智能报告。
+3. 提供多方案比选、人工确认、可解释的调度与诊断结果。
+4. 与储能运营平台、充电桩平台、微信小程序、员工端、消息推送对接，实现工单、故障、巡检、报
+告全流程自动化。
+5. 提供运维报表、工单看板和异常监控，支撑运营决策。
+6. 硬约束代码化，LLM 只做解释和辅助，保证公平、可追溯、可审计。
+1.4 项目目标
+1. 建设稳定、可扩展的充电桩运维管理平台，支撑千人级用户与终端同时在线。
+2. 实现工单申请、下发、接单、退回、巡检、子任务、导出全流程闭环。
+3. 实现故障上报、核查、等级判定、统计全流程闭环。
+
+===== PAGE 2 =====
+
+4. 建设角色、用户、权限、消息、统计、台账等基础能力。
+5. 建设 AI Agent 中心：智能工单调度、智能故障诊断、智能巡检报告、智能运维建议、智能风控、
+智能报告。
+6. 建设运维分析建议报告 Agent：日/周/月/即时报告自动生成、推送、追问、对比。
+7. 提供工单、故障、巡检、报告数据看板，支撑运营决策。
+8. 保证系统安全、可监控、可追溯、可扩展。
+二、总体架构
+2.1 分层架构
+┌──────────────────────────────────────────────┐
+│ 前端层                                        │
+│ 微信小程序：工单/故障/作业/巡检/消息/我的      │
+│ 管理后台：角色/用户/工单/故障/台账/统计/报告   │
+│ 员工端：接单/巡检/故障上报/故障核查/消息        │
+└──────────────────────────────────────────────┘
+│
+┌──────────────────────────────────────────────┐
+│ 接入层                                        │
+│ Nginx / API 网关 / 负载均衡 / HTTPS / 限流     │
+└──────────────────────────────────────────────┘
+│
+┌──────────────────────────────────────────────┐
+│ FastAPI 应用层                                │
+│ REST API / WebSocket / 认证鉴权 / 请求校验      │
+└──────────────────────────────────────────────┘
+│
+┌──────────────────────────────────────────────┐
+│ LangGraph AI Agent 编排层                     │
+│ 状态机 / 节点编排 / 中断恢复 / 检查点持久化     │
+│ 工单调度Agent / 故障诊断Agent / 巡检报告Agent  │
+│ 运维建议Agent / 风控Agent / 报告Agent / 编排Agent│
+└──────────────────────────────────────────────┘
+│
+┌──────────────────────────────────────────────┐
+│ 领域服务层                                    │
+│ 工单服务 / 故障服务 / 作业服务 / 台账服务       │
+│ 用户服务 / 角色服务 / 消息服务 / 统计服务       │
+│ 随机组卷 / 答题判分 / 积分计算 / 防刷风控       │
+│ 任务生成 / 子任务计算 / 巡检校验 / 报告统计     │
+└──────────────────────────────────────────────┘
+│
+┌──────────────────────────────────────────────┐
+│ 基础设施层                                    │
+│ PostgreSQL / Redis / RabbitMQ / Celery         │
+│ 对象存储 / Milvus / Infinity / 监控告警 / 日志  │
+└──────────────────────────────────────────────┘
+│
+┌──────────────────────────────────────────────┐
+│ 外部集成                                      │
+│ 储能运营平台 / 充电桩平台 / 电力市场 / 天气     │
+│ 地图服务 / 微信登录 / 飞书 / 邮件 / LLM API     │
+│ 向量库 / OCR / PDF 生成 / 员工端扫码            │
+└──────────────────────────────────────────────┘
+
+===== PAGE 3 =====
+
+2.2 技术栈选型
+层级技术选型说明
+
+===== PAGE 4 =====
+
+层级技术选型说明
+小程序
+微信小程序原生 / Taro / uni-app工单、故障、巡检、消息、我的
+端
+管理后角色、用户、工单、故障、台账、统
+Vue3 + Ant Design Vue
+台计、报告
+员工端微信小程序 / H5接单、巡检、故障上报、故障核查
+后端框
+FastAPI高性能异步、自动生成 OpenAPI
+架
+工作流
+LangGraph有状态、可中断、可恢复
+编排
+LLM 框
+LangChainPrompt、Chain、Tool、RAG
+架
+LLM 模DeepSeek-V4 API / Qwen2.5-72B-Instruct
+报告生成、根因分析、运维建议
+型/ 本地模型
+故障案例库、设备手册、SOP 知识
+向量库Milvus / Inﬁnity
+库
+嵌入模
+text-embedding-v4中文语义理解，支持混合检索
+型
+文档解PDF、Word、Excel、PPT、图片
+DeepDOC + PaddleOCR
+析OCR
+报告生PDF、Markdown、平台内嵌 Web
+Jinja2 + WeasyPrint
+成展示
+工单、故障、巡检、台账、用户、报
+数据库PostgreSQL 15+
+告
+缓存Redis会话、任务状态、消息、排行、限流
+异步任报告生成、统计、消息推送、定时任
+Celery / Arq
+务务
+消息队
+RabbitMQ / Kafka工单事件、故障事件、报告事件
+列
+对象存
+MinIO / 阿里云 OSS巡检图片、故障图片、报告文件
+储
+可观测LangSmith / Langfuse + Prometheus +
+LLM 追踪 + 系统监控
+性Grafana
+容器化Docker + Kubernetes弹性伸缩，支撑千人级并发
+地图服
+高德 / 百度 / 自研站点导航、路线规划、位置分享
+务
+2.3 性能与并发设计
+
+===== PAGE 5 =====
+
+按千人级用户与终端同时在线估算：
+工单提交峰值：按 500～1000 QPS 设计；
+故障上报、巡检提交、消息拉取等接口叠加，按 1000 QPS 设计；
+通过 Nginx / API 网关限流，保护后端；
+FastAPI 多副本部署，K8s HPA 自动扩缩容；
+Redis 缓存任务状态、消息、统计、排行榜；
+PostgreSQL 建立必要索引，工单、故障、巡检记录可按日期分区或归档；
+统计、报告、消息推送异步化，避免阻塞主流程；
+LLM 报告生成、根因分析、建议生成异步化，不阻塞工单与巡检主流程。
+三、功能模块设计
+3.1 模块总览
+1. 系统管理
+2. 角色与用户管理
+3. 工单管理
+4. 故障管理
+5. 作业管理
+6. 台账管理
+7. 消息中心
+8. 统计分析与看板
+9. 二期扩展功能
+10. AI Agent 中心
+11. 运维分析建议报告 Agent
+3.2 模块 1：系统管理
+用户管理、角色管理、权限管理；
+菜单管理、字典管理、参数管理；
+操作日志、登录日志、审计日志；
+定时任务、附件管理、消息通知；
+数据权限、接口权限、单点登录；
+系统参数：工单类型、巡检频率、提醒规则、报告周期、AI 开关。
+3.3 模块 2：角色与用户管理
+角色管理：唯一识别码、角色名称、数据权限、角色倒序排列、复杂模糊查询、角色权限分配、角
+色删除、角色新增。
+数据权限：个人数据、站点数据、项目数据、平台数据。
+用户管理：所属项目、所属站点、用户名、手机号、角色、启用状态、用户新增、用户编辑、用户
+信息展示、用户信息修改、站点数据联动显示。
+微信授权手机号登录：通过微信授权获取手机号与用户信息，管理员确认身份并授予权限。
+树形权限菜单：默认折叠，展开支持勾选。
+3.4 模块 3：工单管理
+
+===== PAGE 6 =====
+
+工单首页：工单总数、待办工单、已办工单。
+复杂模糊查询：工单编号、工单名称、站点名称、工单类型、工单状态。
+工单信息展示：工单类型、工单编号+名称、站点名称、站点地点、巡检次数、巡检日期、巡检时
+间、完成状态、时间状态。
+工单 tag：待接单、待完成、已完成、已取消、已退回；正常、紧急、逾期。
+消息推送：快到期工单推送到运维人员消息列表。
+定时任务检测：检测快过期工单并推送。
+分权限显示：个人管理员、站点管理员、项目管理员、平台管理员。
+工单申请：巡视工单、特巡工单、消缺工单、设备检查工单、其他工单。
+工单处理：管理员工单详情、取消工单、待接单退回/接受、已退回取消/重新下发、已取消显示、
+待完成子任务、巡检中、巡检情况录入、巡检详情。
+子任务计算：
+巡视/设备检查/其他工单：子任务数量 = 站点数量 × 巡检周期 × 巡检频率；
+特巡工单：子任务数量 = 站点数量 × 巡检次数；
+消缺工单：生成 1 个子任务。
+工单导出：根据 Excel 模板导出整个工单。
+巡检情况录入：巡视工单、设备检查工单、消缺工单、特巡工单、其他工单，支持多图上传、分类
+显示、正常/异常勾选、200 字备注。
+巡检详情：任务情况显示、导出任务详情、动态显示。
+3.5 模块 4：故障管理
+故障首页：累计已上报故障总数、已核查数、待核查数；站点/桩资产码模糊搜索；全部/待核查/
+已核查 tab；故障卡片信息；故障等级与状态 tag。
+故障上报：级联下拉框联动项目与站点名称展示充电桩资产码，支持模糊查询；多图上传；故障保
+存草稿；故障确认上报。
+故障核查：显示故障信息、多图显示、故障核查录入、核查状态、核查等级、核查描述、多图上
+传、核查信息确认。
+故障等级：一般/严重/危急；核查状态：待上报/待核查/核查通过/核查驳回。
+3.6 模块 5：作业管理
+作业任务：展示该用户名下所有作业子任务。
+复杂模糊查询：工单编号、工单名称、站点名称；任务状态、任务类型。
+任务信息卡片展示。
+3.7 模块 6：台账管理
+台账导出：复杂模糊查询、站台台账查询、充电桩台账查询、信息导出。
+导出 Excel：加载动画、充分提示。
+充电枪数量显示、灭火器字段、摄像头字段等二期修改。
+3.8 模块 7：消息中心
+消息卡片展示：消息提示与内容、时间、未读小红点。
+消息类型区分：工单退回提醒、紧急工单提醒、逾期工单提醒、工单取消提醒。
+消息详情：工单类型、工单编号、工单名称、项目名称、站点名称、巡检人员、巡检日期、巡检频
+率、巡检次数、备注等。
+
+===== PAGE 7 =====
+
+3.9 模块 8：统计分析与看板
+统计分析：下拉框联动年月选择框，固定在页面上方。
+工单统计：工单总数、待办工单、已办工单、完成率。
+图表数据展示：5 种工单数量分布。
+复杂数据查询、逾期率数据展示、项目工单排名、站点消缺工单排名。
+数据导出功能。
+AI 报告 Agent 可生成自然语言解读。
+3.10 模块 9：二期扩展功能
+追加充电枪数量显示；
+站点导航：根据站点位置进行路线导航；
+地图跳转分享：充电站点位置支持分享给微信好友；
+灭火器字段修改：增加“无”选项，单瓶录入规格、生产日期，动态表单；
+摄像头字段修改：球机数量、枪机数量、监控密码。
+3.11 模块 10：AI Agent 中心
+AI Agent 中心是本项目融入 AI Agent 开发元素的核心模块，包含：
+1. 智能工单调度 Agent：根据工单类型、站点、巡检频率、人员排班、地形与权限，生成工单与子
+任务多方案。
+2. 智能故障诊断 Agent：结合 RAG 知识库、设备手册、历史工单，进行根因分析。
+3. 智能巡检报告 Agent：根据巡检记录、图片、异常项，生成巡检报告。
+4. 智能运维建议 Agent：基于诊断结果和历史 SOP，生成可操作的运维建议。
+5. 智能风控 Agent：识别异常工单、异常故障、异常巡检、异常核销。
+6. 智能报告 Agent：生成日/周/月/即时运维分析报告。
+7. 智能数据分析 Agent：将分析引擎结果转化为自然语言摘要。
+8. 编排 Agent：协调各子 Agent，按报告模板组装完整报告，控制报告质量和一致性。
+3.12 模块 11：运维分析建议报告 Agent
+报告类型：日运营简报、周运维分析、月度深度报告、即时分析运营报告。
+报告内容模块：运行概览、充放电分析、设备状态诊断、异常检测与告警、根因分析、运维建议。
+交互能力：报告推送、追问下钻、历史对比。
+技术实现：数据采集层、分析引擎层、LLM 报告生成层、报告输出层。
+数据流：数据采集与预处理、多维分析、Agent 报告生成、报告分发。
+数据更新策略：日报告 T+1 凌晨 2 点；周报告每周一凌晨 3 点；月报告每月 1 日凌晨 4 点；即时
+报告用户触发。
+RAG 平台：多格式解析、向量化与检索、权限体系、问答与摘要、知识库分类建设。
+实施计划：MVP 第 1-4 周，智能分析版本第 5-8 周。
+3.13 模块 12：接口集成与数据交换
+储能运营平台 REST API；
+充电桩平台接口；
+电力市场电价接口；
+天气 API；
+地图路径规划接口；
+GPS 接口；
+微信登录、分享、通知；
+飞书、邮件、站内信；
+对象存储、LLM API、向量库。
+
+===== PAGE 8 =====
+
+3.14 模块 13：监控预警与异常处理
+工单逾期、故障未核查、巡检未完成、报告生成失败；
+接口超时、LLM 调用异常、库存异常、权限异常；
+消息推送失败、数据不一致、异常重排死循环。
+四、AI Agent 详细设计
+4.1 Agent 总体设计原则
+1. 硬约束代码化：工单类型、巡检频率、子任务计算、故障等级、权限、报告周期由确定性代码和求
+解器保证。
+2. LLM 只做解释和辅助：报告生成、根因分析、运维建议、自然语言摘要、题目质量检查。
+3. 多 Agent 协作：工单调度、故障诊断、巡检报告、运维建议、风控、报告、数据分析、编排各司
+其职。
+4. 可中断可恢复：LangGraph interrupt + checkpoint，支持人工确认和异常重排。
+5. 规则版本化：每次调度记录规则版本，保证可追溯。
+6. 混合求解：启发式快速出解，CP-SAT 精确优化。
+7. 异常可重排：锁定已执行任务，局部优先修复。
+8. 与工单/故障/报告闭环：工单下发、巡检执行、故障核查、报告推送形成闭环。
+4.2 LangGraph 状态定义
+class MaintenanceState(TypedDict):
+task_id: str
+tenant_id: str
+project_id: str
+station_id: str
+schedule_date: str
+time_window: str
+status: str
+# 数据快照
+work_orders: List[Dict]
+work_order_subtasks: List[Dict]
+faults: List[Dict]
+inspections: List[Dict]
+assets: List[Dict]
+users: List[Dict]
+roles: List[Dict]
+messages: List[Dict]
+statistics: List[Dict]
+report_data: Dict
+# 规则
+hard_constraints: Dict
+soft_constraints: Dict
+rule_version: str
+# 校验
+validation_errors: List[str]
+validation_warnings: List[str]
+# 方案
+
+===== PAGE 9 =====
+
+candidate_plans: List[Dict]
+scored_plans: List[Dict]
+selected_plan: Optional[Dict]
+plan_explanation: Optional[str]
+# 人工确认
+confirmation: Optional[Dict]
+# 执行
+dispatch_result: Optional[Dict]
+# 异常与重排
+exception_events: List[Dict]
+replan_count: int
+# 报告
+report: Optional[str]
+messages: List[Any]
+4.3 工作流图
+正常工单/巡检流程：
+START
+→ load_task
+→ data_perception
+→ constraint_parse
+→ rule_validation
+→ work_order_generation
+→ task_scheduling
+→ inspection_processing
+→ fault_diagnosis
+→ report_generation
+→ human_confirmation
+→ dispatch_execution
+→ END
+异常重排入口：
+异常事件
+→ monitor_exception
+→ impact_analysis
+→ replan
+→ plan_scoring
+→ human_confirmation
+→ dispatch_execution
+4.4 各节点实现要点
+
+===== PAGE 10 =====
+
+节点职责关键技术
+load_task加载任务、租户、项目、日期、时间窗DB 查询
+拉取工单、故障、巡检、资产、用户、
+data_perceptionasyncio.gather 并行
+规则
+constraint_parse规则中心配置解析为硬/软约束Pydantic 模型
+rule_validation校验数据完整性、规则冲突、权限冲突确定性校验
+OR-Tools CP-SAT + 启发
+work_order_generation生成工单与子任务多方案
+式
+task_scheduling任务分配、人员排班、路线规划启发式 + 地图服务
+inspection_processing巡检记录处理、异常识别规则引擎 + OCR
+fault_diagnosis故障根因分析RAG + LLM
+report_generation生成运维分析报告聚合 SQL + LLM
+human_conﬁrmationinterrupt 等待人工确认LangGraph interrupt
+dispatch_execution下发员工端、写执行记录幂等接口
+monitor_exception接收异常事件MQ 消费
+impact_analysis影响分析规则引擎
+replan重排/重算LangGraph 状态恢复
+4.5 多 Agent 协作架构
+1. 数据分析 Agent：将分析引擎结果转化为自然语言摘要。
+2. 诊断 Agent：结合 RAG 知识库进行根因分析。
+3. 建议 Agent：基于诊断结果和历史 SOP，生成可操作的运维建议。
+4. 趋势 Agent：预测结果 → 趋势描述。
+5. 编排 Agent（主 Agent）：协调各子 Agent，按报告模板组装完整报告，控制报告质量和一致
+性。
+4.6 运维分析建议报告 Agent 设计
+报告类型：日运营简报、周运维分析、月度深度报告、即时分析运营报告。
+报告内容：运行概览、充放电分析、设备状态诊断、异常检测与告警、根因分析、运维建议。
+数据采集层：对接储能运营平台 REST API、实时运行数据、业务数据、外部数据，通过 MCP 方式
+给 Agent 调用。
+分析引擎层：分析规则引擎和 skills 定义，基于储能专家经验的异常检测规则库，阈值可配置。
+LLM 报告生成层：多 Agent 协作，生成自然语言摘要、根因分析、运维建议。
+报告输出层：PDF、Markdown、Platform View。
+
+===== PAGE 11 =====
+
+数据流架构：数据采集与预处理 → 多维分析 → Agent 报告生成 → 报告分发。
+数据更新策略：日报告 T+1 凌晨 2 点；周报告每周一凌晨 3 点；月报告每月 1 日凌晨 4 点；即时
+报告用户触发。
+4.7 RAG 知识库设计
+1. 多格式解析：支持 PDF、Word、Excel、PPT、图片（OCR）、txt 等。
+2. 向量化与检索：提供高精度语义检索能力。
+3. 权限体系：支持部门/项目/角色级文档权限管控。
+4. 问答与摘要：提供问答接口，可总结长文档。
+5. 知识库分类建设：根据不同的业务进行知识库分类建设。
+6. 公司知识资产的统一管理和安全共享基础，是其他 AI 应用的数据底座。
+4.8 人工确认机制
+from langgraph.types import interrupt, Command
+async def human_confirmation(state):
+decision = interrupt({
+"task_id": state["task_id"],
+"plans": state["scored_plans"],
+"recommended": state["scored_plans"][0],
+"explanation": state["plan_explanation"],
+})
+return {"confirmation": decision}
+FastAPI 确认接口：
+POST /api/v1/ai/agent/tasks/{task_id}/confirm
+{
+"approved": true,
+"plan_id": "A",
+"adjustments": []
+}
+恢复执行：
+await graph.ainvoke(
+Command(resume={
+"approved": True,
+"plan_id": "A"
+}),
+config={"configurable": {"thread_id": task_id}}
+)
+4.9 异常重排机制
+异常来源：
+工单逾期、人员缺勤、车辆故障；
+故障误报、故障等级变更；
+巡检未完成、图片缺失、定位异常；
+报告生成失败、LLM 调用异常；
+天气、交通、电力市场变化。
+
+===== PAGE 12 =====
+
+重排策略：
+锁定已执行工单、已核查故障、已完成巡检，不重排；
+只重排未执行、未完成部分；
+优先局部修复，失败再全局重排；
+记录 replan_count，避免无限循环；
+支持自动重排和人工触发。
+五、FastAPI 接口设计
+5.1 小程序/员工端核心接口
+接口方法说明
+/api/v1/auth/wechat-loginPOST微信登录
+/api/v1/user/profileGET/PUT个人资料
+/api/v1/work-ordersGET工单列表
+/api/v1/work-orders/{id}GET工单详情
+/api/v1/work-orders/{id}/acceptPOST接受工单
+/api/v1/work-orders/{id}/rejectPOST退回工单
+/api/v1/work-orders/{id}/cancelPOST取消工单
+/api/v1/work-orders/{id}/subtasksGET子任务列表
+/api/v1/inspectionsPOST巡检录入
+/api/v1/faultsGET故障列表
+/api/v1/faults/reportPOST故障上报
+/api/v1/faults/verifyPOST故障核查
+/api/v1/messagesGET消息列表
+/api/v1/statisticsGET统计查询
+5.2 管理后台核心接口
+接口方法说明
+/api/v1/admin/rolesPOST/PUT/DELETE角色管理
+/api/v1/admin/usersPOST/PUT/DELETE用户管理
+/api/v1/admin/work-ordersPOST/PUT/DELETE工单管理
+/api/v1/admin/faultsGET/PUT故障管理
+/api/v1/admin/assetsGET台账管理
+/api/v1/admin/reports/statisticsGET统计报表
+
+===== PAGE 13 =====
+
+/api/v1/admin/reports/statisticsGET统计报表
+接口方法说明
+/api/v1/admin/reports/exportGET数据导出
+5.3 AI Agent 核心接口
+接口方法说明
+/api/v1/ai/work-order/generatePOST智能工单生成
+/api/v1/ai/fault/diagnosePOST智能故障诊断
+/api/v1/ai/inspection/reportPOST智能巡检报告
+/api/v1/ai/maintenance/suggestPOST智能运维建议
+/api/v1/ai/report/generatePOST智能报告生成
+/api/v1/ai/assistant/askPOST学习助手追问
+/api/v1/ai/risk/checkPOST风控检查
+/api/v1/ai/agent/tasks/{id}GET查询 Agent 任务状态
+/api/v1/ai/agent/tasks/{id}/confirmPOST人工确认
+/api/v1/ai/agent/tasks/{id}/replanPOST异常重排
+5.4 WebSocket 进度推送
+{
+"task_id": "T001",
+"node": "report_generation",
+"status": "running",
+"message": "正在生成月度深度报告",
+"progress": 45
+}
+5.5 核心代码骨架
+from fastapi import FastAPI, BackgroundTasks
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.postgres.ao import AsyncPostgresSaver
+from langgraph.types import Command
+app = FastAPI()
+builder = StateGraph(MaintenanceState)
+builder.add_node("load_task", load_task)
+builder.add_node("data_perception", data_perception)
+builder.add_node("constraint_parse", constraint_parse)
+builder.add_node("rule_validation", rule_validation)
+builder.add_node("work_order_generation", work_order_generation)
+builder.add_node("task_scheduling", task_scheduling)
+builder.add_node("inspection_processing", inspection_processing)
+builder.add_node("fault_diagnosis", fault_diagnosis)
+
+===== PAGE 14 =====
+
+builder.add_node("report_generation", report_generation)
+builder.add_node("human_confirmation", human_confirmation)
+builder.add_node("dispatch_execution", dispatch_execution)
+builder.add_node("monitor_exception", monitor_exception)
+builder.add_node("impact_analysis", impact_analysis)
+builder.add_node("replan", replan)
+builder.add_edge(START, "load_task")
+builder.add_edge("load_task", "data_perception")
+builder.add_edge("data_perception", "constraint_parse")
+builder.add_edge("constraint_parse", "rule_validation")
+builder.add_conditional_edges(
+"rule_validation",
+lambda s: "exception_handler" if s["validation_errors"] else
+"work_order_generation"
+)
+builder.add_conditional_edges(
+"work_order_generation",
+lambda s: "task_scheduling" if s["candidate_plans"] else "relax_constraints"
+)
+builder.add_edge("relax_constraints", "work_order_generation")
+builder.add_edge("task_scheduling", "inspection_processing")
+builder.add_edge("inspection_processing", "fault_diagnosis")
+builder.add_edge("fault_diagnosis", "report_generation")
+builder.add_edge("report_generation", "human_confirmation")
+builder.add_conditional_edges(
+"human_confirmation",
+lambda s: "dispatch_execution" if s["confirmation"]["approved"] else
+"report_generation"
+)
+builder.add_edge("dispatch_execution", END)
+builder.add_edge("exception_handler", END)
+checkpointer = AsyncPostgresSaver.from_conn_string("postgresql://...")
+graph = builder.compile(checkpointer=checkpointer)
+@app.post("/api/v1/ai/agent/tasks")
+async def create_task(req: CreateTaskRequest):
+task = await task_service.create(req)
+return {"task_id": task.id}
+@app.post("/api/v1/ai/agent/tasks/{task_id}/start")
+async def start_task(task_id: str, background_tasks: BackgroundTasks):
+background_tasks.add_task(run_graph, task_id)
+return {"status": "started"}
+async def run_graph(task_id: str):
+config = {"configurable": {"thread_id": task_id}}
+await graph.ainvoke({"task_id": task_id, "status": "created"},
+config=config)
+@app.post("/api/v1/ai/agent/tasks/{task_id}/confirm")
+async def confirm(task_id: str, req: ConfirmRequest):
+config = {"configurable": {"thread_id": task_id}}
+await graph.ainvoke(Command(resume=req.dict()), config=config)
+return {"status": "resumed"}
+
+===== PAGE 15 =====
+
+六、数据库设计
+6.1 核心表
+表名说明
+user用户表
+role角色表
+role_permission角色权限表
+project项目表
+station站点表
+charging_pile充电桩表
+work_order工单主表
+work_order_subtask工单子任务表
+inspection_record巡检记录表
+inspection_item巡检项表
+fault_report故障上报表
+fault_veriﬁcation故障核查表
+asset_ledger台账表
+message消息表
+notiﬁcation通知表
+statistics_daily统计日报表
+ai_agent_taskAI Agent 任务表
+ai_agent_traceAI Agent 追踪表
+ai_prompt_templatePrompt 模板表
+ai_knowledge_base知识库表
+ai_reportAI 报告表
+ai_exception_eventAI 异常事件表
+ai_feedbackAI 反馈表
+operation_log操作日志表
+6.2 关键字段示例
+CREATE TABLE work_order (
+id UUID PRIMARY KEY,
+
+===== PAGE 16 =====
+
+order_no VARCHAR(64) UNIQUE,
+order_name VARCHAR(128),
+order_type VARCHAR(32), -- 巡视/特巡/消缺/设备检查/其他
+project_id UUID,
+station_id UUID,
+status VARCHAR(32), -- 待接单/待完成/已完成/已取消/已退回
+time_status VARCHAR(32), -- 正常/紧急/逾期
+inspector_id UUID,
+inspect_start_date DATE,
+inspect_end_date DATE,
+inspect_frequency VARCHAR(16), -- 月/周/日
+inspect_count INT,
+created_by UUID,
+created_at TIMESTAMP DEFAULT now(),
+updated_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE work_order_subtask (
+id UUID PRIMARY KEY,
+work_order_id UUID NOT NULL,
+station_id UUID,
+sequence INT,
+plan_date DATE,
+status VARCHAR(32),
+completed_at TIMESTAMP,
+created_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE inspection_record (
+id UUID PRIMARY KEY,
+subtask_id UUID NOT NULL,
+inspector_id UUID,
+checkin_location VARCHAR(255),
+checkin_time TIMESTAMP,
+checkout_location VARCHAR(255),
+checkout_time TIMESTAMP,
+content JSONB,
+images JSONB,
+status VARCHAR(32),
+created_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE fault_report (
+id UUID PRIMARY KEY,
+station_id UUID,
+pile_id UUID,
+reporter_id UUID,
+fault_level VARCHAR(16), -- 一般/严重/危急
+description TEXT,
+images JSONB,
+status VARCHAR(32), -- 待上报/待核查/核查通过/核查驳回
+created_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE fault_verification (
+id UUID PRIMARY KEY,
+fault_id UUID NOT NULL,
+verifier_id UUID,
+
+===== PAGE 17 =====
+
+verify_status VARCHAR(32),
+verify_level VARCHAR(16),
+verify_desc TEXT,
+images JSONB,
+created_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE ai_report (
+id UUID PRIMARY KEY,
+report_type VARCHAR(32), -- daily/weekly/monthly/instant
+station_id UUID,
+period_start DATE,
+period_end DATE,
+content JSONB,
+file_url VARCHAR(255),
+status VARCHAR(32),
+created_at TIMESTAMP DEFAULT now()
+);
+七、外部系统集成
+7.1 与储能/充电运营平台集成
+集成方式：
+提供统一的运营平台 API 服务，通过 MCP 的方式给 Agent 调用；
+对接储能运营平台 REST API；
+实时运行数据：充放电功率、SOC、SOH、温度、电压、电流；
+业务数据：工单记录、告警事件、维护记录；
+外部数据：电力市场电价、天气数据。
+7.2 与地图/天气/电力市场集成
+系统集成内容
+地图服务站点导航、路线规划、距离矩阵、位置分享
+天气 API天气数据、异常天气预警
+电力市场电价、收益核算
+GPS签到、签退、轨迹
+7.3 与消息推送集成
+飞书消息；
+邮件；
+平台站内信；
+微信通知；
+企微、钉钉、短信。
+7.4 其他集成
+
+===== PAGE 18 =====
+
+系统集成内容
+微信登录、分享、通知
+对象存储巡检图片、故障图片、报告文件
+LLM API报告生成、根因分析、运维建议
+向量库故障案例库、设备手册、SOP 知识库
+监控LangSmith / Langfuse + Prometheus + Grafana
+八、监控、可观测性与运维
+8.1 LangSmith / Langfuse
+配置环境变量：
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your_key
+LANGCHAIN_PROJECT=maintenance-agent
+作用：
+追踪每个 LangGraph 节点执行；
+调试 LLM 解释和报告；
+评估方案解释质量；
+监控 LLM 成本和延迟；
+沉淀运维案例为数据集。
+8.2 系统监控
+Prometheus + Grafana：API QPS、延迟、错误率；
+节点耗时分布：数据感知、工单生成、故障诊断、报告生成；
+工单成功率、故障核查率、异常重排频率；
+数据库连接池、Redis 命中率、MQ 堆积。
+8.3 告警
+工单任务失败；
+求解超时；
+方案生成无解；
+下发失败；
+异常事件未处理；
+LLM 调用异常；
+报告生成失败。
+8.4 日志与审计
+操作日志：谁创建、启动、确认、重排；
+规则变更日志：谁改了规则、改了什么、何时生效；
+方案审计：每个方案的规则版本、数据快照、评分明细；
+下发审计：下发时间、接收方、结果；
+
+===== PAGE 19 =====
+
+AI 审计：Prompt、模型、输出、人工修正。
+九、部署方案
+9.1 容器化部署
+Kubernetes 集群
+├── FastAPI Pod × N
+├── Celery Worker × N
+├── PostgreSQL 主从
+├── Redis 集群
+├── RabbitMQ
+├── Milvus / Infinity
+├── MinIO
+├── Nginx Ingress
+└── 监控组件
+9.2 环境划分
+开发环境 dev
+测试环境 test
+预生产 staging
+生产环境 prod
+9.3 配置管理
+环境变量 + ConﬁgMap；
+敏感信息使用 Secret；
+工单规则、巡检频率、报告周期、AI 开关走数据库，支持热更新；
+规则变更记录操作日志。
+十、实施计划
+阶段周期内容
+2～3
+阶段一：基础建设系统管理、角色、用户、权限、数据库、基础 API
+周
+阶段二：工单与故3～4
+工单管理、故障管理、作业管理、台账管理、消息中心
+障核心周
+阶段三：AI Agent3～4LangGraph 工作流、智能工单调度、智能故障诊断、智能巡检报
+增强周告、智能运维建议
+阶段四：报告与闭2～3运维分析建议报告 Agent、日/周/月/即时报告、推送、追问、历
+环周史对比
+阶段五：优化与上2～3
+报表看板、压测、监控、灰度上线
+线周
+
+===== PAGE 20 =====
+
+参考运维分析建议报告 Agent 的 MVP：第 1-4 周跑通全流程；第 5-8 周集成 AI 分析能力，上线
+日/周/月报告系统。
+十一、关键技术风险与应对
+风险应对
+千人级并发压力Redis 缓存、K8s 扩容、限流、压测
+工单子任务计算复杂规则引擎 + CP-SAT + 人工确认
+故障误报、漏报多级核查 + RAG 知识库 + 人工确认
+巡检定位异常GPS + 签到校验 + 异常重排
+LLM 报告不准确硬约束代码化，RAG 知识库，人工确认，LangSmith 评估
+LLM 成本高、延迟大异步生成、缓存、降级、本地模型
+数据不一致数据快照 + 规则版本快照；事务保证
+接口不稳定重试、熔断、补偿；消息队列异步
+异常重排死循环replan_count 限制；锁定已执行任务
+权限越权数据权限 + 接口权限 + 审计日志
+知识库更新滞后定期更新 + 版本管理 + 反馈闭环
+十二、项目交付物
+1. 需求文档：业务需求、功能清单、验收标准；
+2. 设计文档：架构设计、数据库设计、接口设计；
+3. 代码仓库：小程序 + 管理后台 + 员工端 + 后端 + AI Agent；
+4. 工单/故障/巡检/报告规则配置手册；
+5. 部署文档：Docker/K8s、环境变量、初始化脚本；
+6. 测试报告：单元测试、集成测试、并发压测；
+7. 运维手册：监控、告警、故障处理；
+8. 用户手册：工单、故障、巡检、报告、核销；
+9. AI Agent 评估报告：报告准确率、根因分析准确率、用户满意度；
+10. 数据报表与看板说明。
+十三、总结
+本方案以 FastAPI + LangGraph + LangChain + LLM + RAG + OR-Tools 为核心技术栈，构建了一个
+可编排、可中断、可解释、可执行、可监控的充电桩运维管理 AI Agent 平台。
+核心设计原则：
+1. 硬约束代码化：工单类型、巡检频率、子任务计算、故障等级、权限、报告周期由确定性代码和求
+解器保证。
+2. LLM 只做解释和辅助：报告生成、根因分析、运维建议、自然语言摘要、知识库问答。
+
+===== PAGE 21 =====
+
+3. 多 Agent 协作：工单调度、故障诊断、巡检报告、运维建议、风控、报告、数据分析、编排各司
+其职。
+4. 多方案比选 + 人工确认：真实商业项目必须有人工确认环节。
+5. 规则版本化：每次调度记录规则版本，保证可追溯。
+6. 混合求解：启发式快速出解，CP-SAT 精确优化。
+7. 异常可重排：锁定已执行任务，局部优先修复。
+8. 与工单/故障/报告闭环：工单下发、巡检执行、故障核查、报告推送形成闭环。
+该方案既满足当前充电桩运维管理需求，又具备良好的扩展性，可支撑后续多项目、多站点、多车型、
+多期报告的规模化运维场景。

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <!--
+      ★ charset 必须放在所有 <script> 之前。
+      否则浏览器在读到中文之前就已按默认编码解析，页面标题等中文会变成乱码。
+      Vite 开发模式会在 <head> 最前面注入 /@vite/client，所以这一行位置必须最靠前。
+    -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RBAC 权限管理系统</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

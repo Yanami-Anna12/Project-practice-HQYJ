@@ -1,0 +1,246 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  40 秒。这一页是全场技术含量最高的一页：子任务数量按公式算出来，不靠人估。
+  把日=30、周=4、月=1 这组映射念清楚，这是 PDF 明确要求的硬约束。
+elements:
+  - elementId: p03-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p03-code
+    elementType: text
+    bounds: [48, 32, 560, 16]
+    content:
+      style: $section
+      text: 02 / 硬约束代码化
+  - elementId: p03-title
+    elementType: text
+    bounds: [48, 54, 864, 38]
+    content:
+      text: 子任务数量由公式计算，不由人估
+      style: $pageTitle
+  - elementId: p03-tbl-head
+    elementType: text
+    bounds: [48, 106, 520, 16]
+    content:
+      text: 五类工单的子任务计算规则（硬约束）
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p03-table
+    elementType: table
+    bounds: [48, 128, 520, 188]
+    style: $spec
+    columnWidths:
+      - 0.2
+      - 0.52
+      - 0.28
+    rowHeights:
+      - 0.2
+      - 0.16
+      - 0.16
+      - 0.16
+      - 0.16
+      - 0.16
+    rows:
+      - - text: 工单类型
+        - text: 子任务数量公式
+        - text: 说明
+      - - text: 巡视
+        - text: 站点数量 × 巡检周期 × 巡检频率
+        - text: 三类合一
+      - - text: 设备检查
+        - text: 站点数量 × 巡检周期 × 巡检频率
+        - text: 同上
+      - - text: 其他
+        - text: 站点数量 × 巡检周期 × 巡检频率
+        - text: 同上
+      - - text: 特巡
+        - text: 站点数量 × 巡检次数
+        - text: 按次数
+      - - text: 消缺
+        - text: 固定 1 个
+        - text: 单点处置
+  - elementId: p03-freq-head
+    elementType: text
+    bounds: [48, 332, 520, 16]
+    content:
+      text: 巡检周期的频率映射
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p03-f1
+    elementType: shape
+    bounds: [48, 354, 164, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p03-f1-n
+    elementType: text
+    bounds: [62, 362, 136, 30]
+    content:
+      text: '30'
+      style: $metric
+      fontSize: 24
+  - elementId: p03-f1-l
+    elementType: text
+    bounds: [62, 392, 136, 18]
+    content:
+      text: 日巡检 / 每周期
+      style: $small
+      fontSize: 8.5
+      bold: true
+  - elementId: p03-f2
+    elementType: shape
+    bounds: [224, 354, 164, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p03-f2-n
+    elementType: text
+    bounds: [238, 362, 136, 30]
+    content:
+      text: '4'
+      style: $metric
+      fontSize: 24
+  - elementId: p03-f2-l
+    elementType: text
+    bounds: [238, 392, 136, 18]
+    content:
+      text: 周巡检 / 每周期
+      style: $small
+      fontSize: 8.5
+      bold: true
+  - elementId: p03-f3
+    elementType: shape
+    bounds: [400, 354, 168, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p03-f3-n
+    elementType: text
+    bounds: [414, 362, 140, 30]
+    content:
+      text: '1'
+      style: $metric
+      fontSize: 24
+  - elementId: p03-f3-l
+    elementType: text
+    bounds: [414, 392, 140, 18]
+    content:
+      text: 月巡检 / 每周期
+      style: $small
+      fontSize: 8.5
+      bold: true
+  - elementId: p03-right
+    elementType: shape
+    bounds: [596, 106, 316, 310]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p03-right-head
+    elementType: shape
+    bounds: [596, 106, 316, 26]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p03-right-label
+    elementType: text
+    bounds: [610, 110, 290, 18]
+    content:
+      text: 为什么必须写进代码
+      style: $label
+      fontSize: 8.5
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p03-right-1
+    elementType: text
+    bounds: [612, 146, 286, 62]
+    content:
+      text: |-
+        子任务数直接决定派工量、
+        工时估算和考核口径。
+        算错一个，整月的报表
+        全部失真。
+      style: $small
+      fontSize: 9
+      lineHeight: 1.55
+  - elementId: p03-right-div
+    elementType: line
+    bounds: [612, 218, 286, 1]
+    viewBox: [286, 1]
+    points: 0,0 286,0
+    border: {width: 0.7, color: $rule}
+  - elementId: p03-right-2
+    elementType: text
+    bounds: [612, 232, 286, 62]
+    content:
+      text: |-
+        公式放在 services/work_order.py
+        的 calc_subtask_count()，
+        求解器与接口共用同一份实现，
+        不重复写第二遍。
+      style: $small
+      fontSize: 9
+      lineHeight: 1.55
+  - elementId: p03-right-div2
+    elementType: line
+    bounds: [612, 304, 286, 1]
+    viewBox: [286, 1]
+    points: 0,0 286,0
+    border: {width: 0.7, color: $rule}
+  - elementId: p03-right-3
+    elementType: text
+    bounds: [612, 318, 286, 82]
+    content:
+      text: |-
+        求解器在生成方案前会复核：
+        巡视类必须给出巡检周期与
+        频率；特巡次数至少为 1；
+        消缺只能对应单个站点。
+        不满足直接判为不可行。
+      style: $small
+      fontSize: 9
+      lineHeight: 1.55
+  - elementId: p03-band
+    elementType: shape
+    bounds: [48, 436, 864, 48]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p03-band-text
+    elementType: text
+    bounds: [66, 442, 828, 36]
+    content:
+      text: 硬约束的判断标准：算错了会导致方案不可行，或者会让报表口径失真。
+      style: $body
+      fontSize: 13
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p03-source
+    elementType: text
+    bounds: [48, 494, 800, 26]
+    content:
+      text: |-
+        依据：backend/app/core/enums.py 第 21-26 行定义五类工单；第 158-160 行注释给出三条公式；
+        backend/app/ai/nodes.py 第 350-356 行与 backend/app/services/work_order.py 的 FREQUENCY_PER_CYCLE 给出频率映射。
+      style: $small
+      fontSize: 7.5
+      lineHeight: 1.5
+  - elementId: p03-page
+    elementType: text
+    bounds: [872, 494, 40, 16]
+    content:
+      text: '03'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, middle]

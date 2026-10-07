@@ -1,0 +1,19 @@
+# RBAC 权限管理系统 —— 后端依赖
+#
+# 本机 py312 conda 环境已预装以下全部包，此文件用于换机复现：
+#   C:\Users\12966\miniconda3\envs\py312\python.exe -m pip install -r requirements.txt
+#
+# 版本按本机实测可用的版本锁定（FastAPI 0.138 + Pydantic v2 + SQLAlchemy 2.0）：
+
+fastapi==0.138.0
+uvicorn==0.40.0
+pydantic==2.12.5
+pydantic-settings==2.14.2
+SQLAlchemy==2.0.51
+PyMySQL==1.2.0
+# 认证相关
+bcrypt==5.0.0               # 密码哈希，不引入 passlib（passlib 1.7.4 读 bcrypt.__about__ 会报警告）
+PyJWT==2.13.0               # JWT 签发与校验（HS256）
+# 测试
+pytest==8.3.4
+httpx==0.28.1               # FastAPI TestClient 的底层 HTTP 客户端

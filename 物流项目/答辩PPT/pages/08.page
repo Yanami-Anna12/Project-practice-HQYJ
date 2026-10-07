@@ -1,0 +1,203 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  30 秒。验证要靠可重复执行的脚本说话。念准 279 这个数字和 0 条控制台错误。
+  强调「跑第二遍不会失败」——这是幂等性的证据。
+elements:
+  - elementId: p08-top
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p08-code
+    elementType: text
+    bounds: [54, 34, 560, 18]
+    content:
+      style: $section
+      text: 07 / 验证结果
+  - elementId: p08-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 279 项自检全部通过，且可以重复执行
+      style: $pageTitle
+  - elementId: p08-k1
+    elementType: shape
+    bounds: [54, 118, 200, 110]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p08-k1-n
+    elementType: text
+    bounds: [72, 134, 164, 46]
+    content:
+      text: '173'
+      style: $metric
+      fontSize: 40
+      color: $yellow
+  - elementId: p08-k1-l
+    elementType: text
+    bounds: [72, 182, 164, 18]
+    content:
+      text: 后端断言 / 6 个脚本
+      style: $small
+      fontSize: 9.5
+      color: $white
+      bold: true
+  - elementId: p08-k1-note
+    elementType: text
+    bounds: [72, 202, 164, 18]
+    content:
+      text: 认证 · 权限 · CRUD · 求解
+      style: $small
+      fontSize: 8.5
+      color: $steel
+  - elementId: p08-k2
+    elementType: shape
+    bounds: [270, 118, 200, 110]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p08-k2-n
+    elementType: text
+    bounds: [288, 134, 164, 46]
+    content:
+      text: '106'
+      style: $metric
+      fontSize: 40
+  - elementId: p08-k2-l
+    elementType: text
+    bounds: [288, 182, 164, 18]
+    content:
+      text: 前端断言 / 5 个脚本
+      style: $small
+      fontSize: 9.5
+      bold: true
+  - elementId: p08-k2-note
+    elementType: text
+    bounds: [288, 202, 164, 18]
+    content:
+      text: Playwright 驱动真实浏览器
+      style: $small
+      fontSize: 8.5
+  - elementId: p08-k3
+    elementType: shape
+    bounds: [486, 118, 200, 110]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p08-k3-n
+    elementType: text
+    bounds: [504, 134, 164, 46]
+    content:
+      text: '0'
+      style: $metric
+      fontSize: 40
+  - elementId: p08-k3-l
+    elementType: text
+    bounds: [504, 182, 164, 18]
+    content:
+      text: 浏览器控制台错误
+      style: $small
+      fontSize: 9.5
+      bold: true
+  - elementId: p08-k3-note
+    elementType: text
+    bounds: [504, 202, 164, 18]
+    content:
+      text: 每个前端脚本都会收集
+      style: $small
+      fontSize: 8.5
+  - elementId: p08-k4
+    elementType: shape
+    bounds: [702, 118, 204, 110]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p08-k4-n
+    elementType: text
+    bounds: [720, 134, 168, 46]
+    content:
+      text: '2 遍'
+      style: $metric
+      fontSize: 34
+  - elementId: p08-k4-l
+    elementType: text
+    bounds: [720, 182, 168, 18]
+    content:
+      text: 连续跑两遍结果一致
+      style: $small
+      fontSize: 9.5
+      bold: true
+  - elementId: p08-k4-note
+    elementType: text
+    bounds: [720, 202, 168, 18]
+    content:
+      text: 自检脚本是幂等的
+      style: $small
+      fontSize: 8.5
+  - elementId: p08-tbl-head
+    elementType: text
+    bounds: [54, 248, 852, 18]
+    content:
+      text: 后端 6 个脚本的覆盖范围
+      style: $label
+      fontSize: 9
+      letterSpacing: 1
+  - elementId: p08-table
+    elementType: table
+    bounds: [54, 272, 852, 148]
+    style: $operations
+    columnWidths:
+      - 0.3
+      - 0.12
+      - 0.58
+    rowHeights:
+      - 0.2
+      - 0.16
+      - 0.16
+      - 0.16
+      - 0.16
+      - 0.16
+    rows:
+      - - text: 脚本
+        - text: 断言数
+        - text: 覆盖内容
+      - - text: check_api.py
+        - text: '42'
+        - text: 认证、权限并集、停用角色失效、CRUD、删除保护、审计只追加
+      - - text: check_demand.py
+        - text: '16'
+        - text: 货量维护与幂等生成
+      - - text: check_solver.py
+        - text: '17'
+        - text: 7 条硬约束独立复核（可加 --cp-sat 验证精确求解）
+      - - text: check_scheduling.py
+        - text: '35'
+        - text: 确认、下发幂等、重排次数上限、调度报告
+      - - text: check_reports.py + check_rules_monitor.py
+        - text: '63'
+        - text: 5 类报表口径、规则版本发布回滚、监控预警
+  - elementId: p08-source
+    elementType: text
+    bounds: [54, 452, 852, 40]
+    content:
+      text: |-
+        前端脚本：verify-ui.mjs（30）· verify-edit-save.mjs（15）· verify-scheduling.mjs（18）· verify-reports.mjs（14）· verify-rules-monitor.mjs（29）
+        另有 compile-check.mjs 检查 40 个 .vue 组件的模板编译，check-form-fields.mjs 静态检查禁用字段是否已回填。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.5
+  - elementId: p08-page
+    elementType: text
+    bounds: [872, 500, 34, 16]
+    content:
+      text: '08'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, middle]

@@ -1,0 +1,50 @@
+# ============================================================================
+# 充电桩运维管理 AI Agent 平台 —— 后端依赖
+# 技术栈来源：《充电桩运维管理 AI Agent 项目技术方案》2.2 技术栈选型
+# ============================================================================
+
+# --- Web 框架（PDF 2.2：FastAPI 高性能异步、自动生成 OpenAPI）---
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.12
+websockets>=13.0
+
+# --- 数据校验与配置 ---
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+
+# --- 数据库（PDF 2.2：PostgreSQL 15+；本地开发默认 SQLite）---
+sqlalchemy[asyncio]>=2.0.36
+aiosqlite>=0.20.0
+psycopg[binary]>=3.2.0
+alembic>=1.13.0
+
+# --- 认证鉴权 ---
+# 密码哈希直接使用 bcrypt（不经 passlib：passlib 1.7.x 读取 bcrypt.__about__，
+# 在 bcrypt 4.1+ 上会抛 AttributeError，直连可少一层依赖并与同环境其他项目共用）
+bcrypt>=4.0.1
+python-jose[cryptography]>=3.3.0
+
+# --- LLM / Agent 编排（PDF 2.2：LangGraph 有状态、可中断、可恢复）---
+# 版本已在本机实测（Python 3.12 + Windows）通过 83 项端到端冒烟测试
+langgraph==1.2.11
+langchain-core>=0.3.15
+openai>=1.54.0
+
+# --- 求解器（PDF 4.1：启发式快速出解 + CP-SAT 精确优化）---
+# 说明：启发式求解器为默认可用路径；OR-Tools CP-SAT 为精确优化增强项，
+# 若某台机器上 OR-Tools 不可用，设置 CPSAT_ENABLED=false 即自动退化，功能不受影响。
+ortools>=9.11.0
+
+# --- 报表 / 导出（PDF 2.2：Jinja2 + 报告生成）---
+jinja2>=3.1.4
+openpyxl>=3.1.5
+pandas>=2.2.0
+reportlab>=4.2.0
+
+# --- HTTP 客户端（对接储能运营平台 / 地图 / 天气 / 飞书）---
+httpx>=0.27.0
+
+# --- 测试 ---
+pytest>=8.3.0
+pytest-asyncio>=0.24.0

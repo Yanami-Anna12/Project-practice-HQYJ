@@ -1,0 +1,213 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  30 秒。主动交代限制，不要等老师问。
+  重点：外部平台一个都没真实连通；知识库只有 6 条演示数据；部分交付物未单独成文。
+elements:
+  - elementId: p08-top
+    elementType: shape
+    bounds: [0, 0, 960, 5]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p08-code
+    elementType: text
+    bounds: [48, 32, 560, 16]
+    content:
+      style: $section
+      text: 07 / 已知限制
+  - elementId: p08-title
+    elementType: text
+    bounds: [48, 54, 864, 38]
+    content:
+      text: 能力边界如实标注，不用示例数据撑场面
+      style: $pageTitle
+  - elementId: p08-g1
+    elementType: shape
+    bounds: [48, 106, 424, 118]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $accent, width: 1.5}
+  - elementId: p08-g1-h
+    elementType: shape
+    bounds: [48, 106, 424, 26]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p08-g1-l
+    elementType: text
+    bounds: [62, 110, 396, 18]
+    content:
+      text: 01 / 外部平台全部未真实对接
+      style: $label
+      fontSize: 8.5
+      color: $white
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p08-g1-b
+    elementType: text
+    bounds: [62, 142, 396, 72]
+    content:
+      text: |-
+        储能运营平台、充电桩平台、电力市场、天气、地图路径
+        规划 —— 都只有配置位与调用封装，没有可用凭据，
+        未做联调。未配置时相关章节自动省略，不生成占位数字。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p08-g2
+    elementType: shape
+    bounds: [488, 106, 424, 118]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $accent, width: 1.5}
+  - elementId: p08-g2-h
+    elementType: shape
+    bounds: [488, 106, 424, 26]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p08-g2-l
+    elementType: text
+    bounds: [502, 110, 396, 18]
+    content:
+      text: 02 / 小程序端与员工端未建工程
+      style: $label
+      fontSize: 8.5
+      color: $white
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p08-g2-b
+    elementType: text
+    bounds: [502, 142, 396, 72]
+    content:
+      text: |-
+        后端接口已就绪（如 /work-orders/subtasks/mine 等），
+        但原生小程序工程没有创建。本次范围确认为
+        「后端 + LangGraph Agent 中心 + Vue3 管理后台」。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p08-g3
+    elementType: shape
+    bounds: [48, 236, 424, 118]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p08-g3-h
+    elementType: shape
+    bounds: [48, 236, 424, 26]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p08-g3-l
+    elementType: text
+    bounds: [62, 240, 396, 18]
+    content:
+      text: 03 / 知识库只有 6 条演示数据
+      style: $label
+      fontSize: 8.5
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p08-g3-b
+    elementType: text
+    bounds: [62, 272, 396, 72]
+    content:
+      text: |-
+        6 条（SOP 3 / 故障案例 2 / 设备手册 1）。检索链路是完整
+        可用的（TF-IDF + 余弦相似度），但语料规模不足以支撑
+        生产级诊断质量 —— 需要真实运维资料导入后才能评估。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p08-g4
+    elementType: shape
+    bounds: [488, 236, 424, 118]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p08-g4-h
+    elementType: shape
+    bounds: [488, 236, 424, 26]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p08-g4-l
+    elementType: text
+    bounds: [502, 240, 396, 18]
+    content:
+      text: 04 / 交付文档未全部单独成文
+      style: $label
+      fontSize: 8.5
+      color: $accentPale
+      letterSpacing: 1
+      align: [left, middle]
+  - elementId: p08-g4-b
+    elementType: text
+    bounds: [502, 272, 396, 72]
+    content:
+      text: |-
+        架构、数据库与接口设计已写入 README；但测试报告、
+        用户手册、运维手册、AI 评估报告没有单独成文。
+        三套验证脚本本身可作为测试证据。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p08-g5
+    elementType: shape
+    bounds: [48, 366, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.2}
+  - elementId: p08-g5-l
+    elementType: text
+    bounds: [62, 380, 180, 20]
+    content:
+      text: 05 / 其他技术性简化
+      style: $label
+      fontSize: 8.5
+      letterSpacing: 1
+  - elementId: p08-g5-b
+    elementType: text
+    bounds: [62, 402, 836, 20]
+    content:
+      text: 向量库为内置实现（非 Milvus/Infinity）；报告推送的微信 / 飞书 / 邮件通道只有代码路径，无凭据时安全跳过。
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.55
+  - elementId: p08-band
+    elementType: shape
+    bounds: [48, 442, 864, 46]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p08-band-text
+    elementType: text
+    bounds: [66, 448, 828, 34]
+    content:
+      text: 宁可少写几个功能，也不放一个看起来能跑、实际经不起查的东西上去。
+      style: $body
+      fontSize: 13
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p08-source
+    elementType: text
+    bounds: [48, 498, 820, 16]
+    content:
+      text: 依据：GET /api/v1/ai/knowledge/categories 实测 SOP 3 / 故障案例 2 / 设备手册 1；外部平台配置项见 backend/.env 空值项。
+      style: $small
+      fontSize: 7.5
+  - elementId: p08-page
+    elementType: text
+    bounds: [872, 498, 40, 16]
+    content:
+      text: '08'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, middle]

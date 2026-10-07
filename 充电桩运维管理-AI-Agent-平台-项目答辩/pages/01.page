@@ -1,0 +1,268 @@
+pageType: cover
+background:
+  type: solid
+  color: $paper
+notes: |
+  开场 20 秒。一句话说清这个平台是干什么的。
+  强调「硬约束代码化，LLM 只负责解释」这一条设计主线。
+elements:
+  - elementId: p01-grid-v1
+    elementType: line
+    bounds: [600, 0, 1, 540]
+    viewBox: [1, 540]
+    points: 0,0 0,540
+    border: {width: 0.5, color: $rule}
+  - elementId: p01-grid-v2
+    elementType: line
+    bounds: [720, 0, 1, 540]
+    viewBox: [1, 540]
+    points: 0,0 0,540
+    border: {width: 0.5, color: $rule}
+  - elementId: p01-grid-v3
+    elementType: line
+    bounds: [840, 0, 1, 540]
+    viewBox: [1, 540]
+    points: 0,0 0,540
+    border: {width: 0.5, color: $rule}
+  - elementId: p01-grid-h1
+    elementType: line
+    bounds: [600, 135, 360, 1]
+    viewBox: [360, 1]
+    points: 0,0 360,0
+    border: {width: 0.5, color: $rule}
+  - elementId: p01-grid-h2
+    elementType: line
+    bounds: [600, 270, 360, 1]
+    viewBox: [360, 1]
+    points: 0,0 360,0
+    border: {width: 0.5, color: $rule}
+  - elementId: p01-grid-h3
+    elementType: line
+    bounds: [600, 405, 360, 1]
+    viewBox: [360, 1]
+    points: 0,0 360,0
+    border: {width: 0.5, color: $rule}
+  - elementId: p01-rail
+    elementType: shape
+    bounds: [48, 60, 5, 250]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p01-code
+    elementType: text
+    bounds: [70, 46, 520, 18]
+    content:
+      style: $section
+      text: 项目答辩 / CHARGING-PILE O&M AI AGENT PLATFORM
+  - elementId: p01-title
+    elementType: text
+    bounds: [68, 76, 520, 130]
+    content:
+      text: |-
+        充电桩运维管理
+        AI Agent 平台
+      style: $display
+      fontSize: 36
+      lineHeight: 1.2
+  - elementId: p01-sub
+    elementType: text
+    bounds: [70, 216, 500, 56]
+    content:
+      text: |-
+        把巡检、工单、故障、报告四条主线的运维规则代码化，
+        让 8 类 AI Agent 在硬约束之下辅助调度与决策。
+      style: $body
+      fontSize: 12.5
+      color: $muted
+      lineHeight: 1.5
+  - elementId: p01-claim-label
+    elementType: text
+    bounds: [70, 288, 500, 18]
+    content:
+      text: 设计主线
+      style: $label
+      fontSize: 8.5
+      color: $accent
+      letterSpacing: 1
+  - elementId: p01-claim
+    elementType: text
+    bounds: [70, 308, 500, 28]
+    content:
+      text: 硬约束代码化，LLM 只负责解释与表达。
+      style: $body
+      fontSize: 15
+      bold: true
+  - elementId: p01-n1
+    elementType: shape
+    bounds: [628, 88, 100, 54]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p01-n1-tag
+    elementType: shape
+    bounds: [628, 88, 100, 8]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $accent, width: 0}
+  - elementId: p01-n1-text
+    elementType: text
+    bounds: [634, 102, 88, 36]
+    content:
+      text: |-
+        01 数据感知
+        站点 · 设备 · 工单
+      style: $small
+      fontSize: 8.5
+      color: $ink
+      align: [center, middle]
+  - elementId: p01-a1
+    elementType: line
+    bounds: [728, 114, 40, 1]
+    viewBox: [40, 1]
+    points: 0,0 40,0
+    border: {width: 2, color: $ink}
+  - elementId: p01-n2
+    elementType: shape
+    bounds: [768, 88, 100, 54]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 1.5}
+  - elementId: p01-n2-text
+    elementType: text
+    bounds: [774, 100, 88, 38]
+    content:
+      text: |-
+        02 规则校验
+        硬约束拦截
+      style: $small
+      fontSize: 8.5
+      color: $white
+      align: [center, middle]
+  - elementId: p01-n3
+    elementType: shape
+    bounds: [628, 178, 100, 54]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p01-n3-text
+    elementType: text
+    bounds: [634, 190, 88, 38]
+    content:
+      text: |-
+        03 方案生成
+        多方案 + 评分
+      style: $small
+      fontSize: 8.5
+      color: $ink
+      align: [center, middle]
+  - elementId: p01-a2
+    elementType: line
+    bounds: [728, 204, 40, 1]
+    viewBox: [40, 1]
+    points: 0,0 40,0
+    border: {width: 2, color: $ink}
+  - elementId: p01-n4
+    elementType: shape
+    bounds: [768, 178, 100, 54]
+    shapeName: rect
+    fill: {type: solid, color: $accent}
+    border: {color: $ink, width: 1.5}
+  - elementId: p01-n4-text
+    elementType: text
+    bounds: [774, 190, 88, 38]
+    content:
+      text: |-
+        04 人工确认
+        人做决策
+      style: $small
+      fontSize: 8.5
+      color: $white
+      bold: true
+      align: [center, middle]
+  - elementId: p01-n5
+    elementType: shape
+    bounds: [628, 268, 100, 54]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p01-n5-text
+    elementType: text
+    bounds: [634, 280, 88, 38]
+    content:
+      text: |-
+        05 下发执行
+        子任务公式
+      style: $small
+      fontSize: 8.5
+      color: $ink
+      align: [center, middle]
+  - elementId: p01-a3
+    elementType: line
+    bounds: [728, 294, 40, 1]
+    viewBox: [40, 1]
+    points: 0,0 40,0
+    border: {width: 2, color: $ink}
+  - elementId: p01-n6
+    elementType: shape
+    bounds: [768, 268, 100, 54]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $ink, width: 1.5}
+  - elementId: p01-n6-text
+    elementType: text
+    bounds: [774, 280, 88, 38]
+    content:
+      text: |-
+        06 反馈闭环
+        异常重排
+      style: $small
+      fontSize: 8.5
+      color: $ink
+      align: [center, middle]
+  - elementId: p01-stack
+    elementType: text
+    bounds: [628, 348, 284, 60]
+    content:
+      text: |-
+        FastAPI · SQLAlchemy 2.0 · SQLite / PostgreSQL
+        LangGraph 1.2 · OR-Tools CP-SAT · DeepSeek
+        Vue 3.5 · Vite 6 · Ant Design Vue · ECharts
+      style: $small
+      fontSize: 8.5
+      lineHeight: 1.7
+  - elementId: p01-band
+    elementType: shape
+    bounds: [48, 452, 864, 56]
+    shapeName: rect
+    fill: {type: solid, color: $ink}
+    border: {color: $ink, width: 0}
+  - elementId: p01-band-label
+    elementType: text
+    bounds: [66, 466, 160, 28]
+    content:
+      text: 平台定位
+      style: $label
+      fontSize: 9
+      color: $accentPale
+      letterSpacing: 0.8
+      align: [left, middle]
+  - elementId: p01-band-text
+    elementType: text
+    bounds: [212, 462, 684, 36]
+    content:
+      text: 把运维规则从「人的经验」搬进代码：可配置、可版本化、可追溯，AI 在规则之内提供辅助。
+      style: $body
+      fontSize: 13.5
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p01-page
+    elementType: text
+    bounds: [872, 28, 40, 16]
+    content:
+      text: '01'
+      style: $small
+      fontSize: 9
+      color: $ink
+      bold: true
+      align: [right, top]

@@ -1,0 +1,215 @@
+pageType: content
+background:
+  type: solid
+  color: $paper
+notes: |
+  25 秒。这一页只讲一个判断：边界情况交给规则，不交给 AI。
+  举三个真实例子说明规则在哪一层拦住。
+elements:
+  - elementId: p07-top
+    elementType: shape
+    bounds: [0, 0, 960, 6]
+    shapeName: rect
+    fill: {type: solid, color: $yellow}
+    border: {color: $yellow, width: 0}
+  - elementId: p07-code
+    elementType: text
+    bounds: [54, 34, 560, 18]
+    content:
+      style: $section
+      text: 06 / 规则与 AI 的分工
+  - elementId: p07-title
+    elementType: text
+    bounds: [54, 58, 852, 42]
+    content:
+      text: 边界情况交给规则，不交给 AI
+      style: $pageTitle
+  - elementId: p07-l1
+    elementType: shape
+    bounds: [54, 122, 414, 74]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p07-l1-no
+    elementType: text
+    bounds: [68, 134, 40, 26]
+    content:
+      text: 规则层
+      style: $label
+      fontSize: 9
+      color: $graphite
+      letterSpacing: 1
+  - elementId: p07-l1-text
+    elementType: text
+    bounds: [68, 160, 386, 30]
+    content:
+      text: 8 条业务约束 · 装载量门槛 · 时段归属 · 地形通行矩阵 · 线路映射
+      style: $small
+      fontSize: 10.5
+      lineHeight: 1.5
+  - elementId: p07-l2
+    elementType: shape
+    bounds: [492, 122, 414, 74]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p07-l2-no
+    elementType: text
+    bounds: [506, 134, 40, 26]
+    content:
+      text: 求解层
+      style: $label
+      fontSize: 9
+      color: $yellow
+      letterSpacing: 1
+  - elementId: p07-l2-text
+    elementType: text
+    bounds: [506, 160, 386, 30]
+    content:
+      text: 启发式 + CP-SAT 求可行解与优化目标，输出四套带评分的方案
+      style: $small
+      fontSize: 10.5
+      color: $white
+      lineHeight: 1.5
+  - elementId: p07-arrow
+    elementType: shape
+    bounds: [454, 300, 52, 8]
+    shapeName: rect
+    fill: {type: solid, color: $steel}
+    border: {color: $steel, width: 0}
+  - elementId: p07-l3
+    elementType: shape
+    bounds: [54, 224, 852, 58]
+    shapeName: rect
+    fill: {type: solid, color: $surface}
+    border: {color: $graphite, width: 1.5}
+  - elementId: p07-l3-no
+    elementType: text
+    bounds: [68, 240, 60, 26]
+    content:
+      text: LLM 层
+      style: $label
+      fontSize: 9
+      color: $risk
+      letterSpacing: 1
+  - elementId: p07-l3-text
+    elementType: text
+    bounds: [160, 240, 730, 26]
+    content:
+      text: 只生成方案解释、调度报告与自然语言摘要。不参与任何约束判断，算错也不影响可行性。
+      style: $small
+      fontSize: 10.5
+      lineHeight: 1.5
+  - elementId: p07-eg-head
+    elementType: text
+    bounds: [54, 302, 852, 18]
+    content:
+      text: 规则层实际拦下的三类边界情况
+      style: $label
+      fontSize: 9
+      letterSpacing: 1
+  - elementId: p07-eg1
+    elementType: shape
+    bounds: [54, 326, 268, 92]
+    shapeName: rect
+    fill: {type: solid, color: $yellowPale}
+    border: {color: $yellowPale, width: 0}
+  - elementId: p07-eg1-t
+    elementType: text
+    bounds: [68, 338, 240, 20]
+    content:
+      text: 趟次拆分不自洽
+      style: $small
+      fontSize: 10.5
+      bold: true
+  - elementId: p07-eg1-b
+    elementType: text
+    bounds: [68, 362, 240, 46]
+    content:
+      text: |-
+        上午趟次 + 下午趟次 ≠ 每日趟次
+        时直接拒绝，不允许存进配置。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p07-eg2
+    elementType: shape
+    bounds: [346, 326, 268, 92]
+    shapeName: rect
+    fill: {type: solid, color: $yellowPale}
+    border: {color: $yellowPale, width: 0}
+  - elementId: p07-eg2-t
+    elementType: text
+    bounds: [360, 338, 240, 20]
+    content:
+      text: 地形通行不允许
+      style: $small
+      fontSize: 10.5
+      bold: true
+  - elementId: p07-eg2-b
+    elementType: text
+    bounds: [360, 362, 240, 46]
+    content:
+      text: |-
+        严控地形禁止小包车型进入，
+        矩阵在保存时就做校验。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p07-eg3
+    elementType: shape
+    bounds: [638, 326, 268, 92]
+    shapeName: rect
+    fill: {type: solid, color: $yellowPale}
+    border: {color: $yellowPale, width: 0}
+  - elementId: p07-eg3-t
+    elementType: text
+    bounds: [652, 338, 240, 20]
+    content:
+      text: 整数参数写入非数字
+      style: $small
+      fontSize: 10.5
+      bold: true
+  - elementId: p07-eg3-b
+    elementType: text
+    bounds: [652, 362, 240, 46]
+    content:
+      text: |-
+        求解超时等参数要求整数，
+        非数字直接报错不落库。
+      style: $small
+      fontSize: 9.5
+      lineHeight: 1.5
+  - elementId: p07-gate
+    elementType: shape
+    bounds: [54, 432, 852, 50]
+    shapeName: rect
+    fill: {type: solid, color: $graphite}
+    border: {color: $graphite, width: 0}
+  - elementId: p07-gate-text
+    elementType: text
+    bounds: [74, 442, 812, 30]
+    content:
+      text: 如果一个约束算错了会导致方案不可行，它就必须写在代码里，而不是交给模型判断。
+      style: $body
+      fontSize: 14
+      color: $white
+      bold: true
+      align: [left, middle]
+  - elementId: p07-source
+    elementType: text
+    bounds: [54, 496, 760, 16]
+    content:
+      text: 三类边界情况分别由车辆类型配置校验、地形矩阵校验、参数类型校验拦截；自检脚本 check_api.py / check_solver.py 覆盖
+      style: $small
+      fontSize: 8
+  - elementId: p07-page
+    elementType: text
+    bounds: [872, 496, 34, 16]
+    content:
+      text: '07'
+      style: $small
+      fontSize: 9
+      color: $graphite
+      bold: true
+      align: [right, middle]
