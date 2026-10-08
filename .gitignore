@@ -104,12 +104,6 @@ logs/
 /车辆智能调度 Agent 项目技术方案.pdf
 /充电桩运维管理 AI Agent 项目技术方案.pdf
 
-# 物流项目的运行时数据
-物流项目/Project-practice-HQYJ-main/物流项目/backend/logs/
-物流项目/Project-practice-HQYJ-main/物流项目/frontend/logs/
-物流项目/Project-practice-HQYJ-main/面向DeepseekHarness的RBAC项目开发/backend/logs/
-物流项目/Project-practice-HQYJ-main/面向DeepseekHarness的RBAC项目开发/frontend/logs/
-
 # 数据库文件（任何位置）
 *.db
 *.db-shm
