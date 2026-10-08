@@ -15,6 +15,32 @@ from sqlalchemy.engine import URL, make_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _mysql_reachable(s: "Settings", timeout: int = 2) -> bool:
+    """快速探测 MySQL 是否可用（端口能连上且账号密码正确）。
+
+    只用于「决定用 MySQL 还是回退 SQLite」，任何异常一律视为不可用。
+    """
+    try:
+        import pymysql
+    except ModuleNotFoundError:
+        return False
+    try:
+        conn = pymysql.connect(
+            host=s.DB_HOST,
+            port=s.DB_PORT,
+            user=s.DB_USER,
+            password=s.DB_PASSWORD,
+            connect_timeout=timeout,
+            read_timeout=timeout,
+            write_timeout=timeout,
+            charset="utf8mb4",
+        )
+        conn.close()
+        return True
+    except Exception:  # noqa: BLE001 —— 探测失败即回退，不向上抛
+        return False
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
@@ -32,6 +58,13 @@ class Settings(BaseSettings):
     DB_USER: str = "root"
     DB_PASSWORD: str = ""
     DB_NAME: str = "logistics_db"
+
+    # 显式指定连接串时优先使用（可填 sqlite:///... 或 postgresql+psycopg://...）；留空走自动选择
+    DATABASE_URL: str = ""
+    # 换台电脑没有 MySQL 时自动改用本地 SQLite，保证开箱即跑；设为 False 可强制要求 MySQL
+    DB_FALLBACK_SQLITE: bool = True
+    # SQLite 文件位置（相对 backend/ 目录）
+    SQLITE_PATH: str = "data/logistics.db"
 
     # ---- JWT ----
     JWT_SECRET: str = "dev-secret"
@@ -59,6 +92,21 @@ class Settings(BaseSettings):
         """把逗号分隔的 CORS 配置切成列表。"""
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
+    @property
+    def sqlite_file(self) -> Path:
+        """SQLite 数据库文件的绝对路径。"""
+        return (BASE_DIR / self.SQLITE_PATH).resolve()
+
+    @property
+    def db_backend(self) -> str:
+        """实际生效的数据库后端：mysql / sqlite / 其它（由 DATABASE_URL 显式指定时）。"""
+        explicit = self.DATABASE_URL.strip()
+        if explicit:
+            return make_url(explicit).get_backend_name()
+        if self.DB_FALLBACK_SQLITE and not _mysql_reachable(self):
+            return "sqlite"
+        return "mysql"
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def database_url(self) -> str:
@@ -77,6 +125,12 @@ class Settings(BaseSettings):
         ★ 切换到 PostgreSQL 只需改这里的 drivername（并安装对应驱动）：
            本项目的模型与查询刻意不使用任何 MySQL 方言。
         """
+        explicit = self.DATABASE_URL.strip()
+        if explicit:
+            return explicit
+        if self.db_backend == "sqlite":
+            # 换台电脑没有 MySQL 时走这里：本地文件库，零配置、无需建库
+            return f"sqlite:///{self.sqlite_file.as_posix()}"
         return URL.create(
             drivername="mysql+pymysql",
             username=self.DB_USER,

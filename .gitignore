@@ -72,6 +72,9 @@ logs/
 *.swp
 .pytest_cache/
 
+# 后端运行时端口记录（run.py 自动生成，不入库）
+.runtime_port
+
 # 充电桩项目的运行时数据
 充电桩项目/backend/data/
 充电桩项目/backend/logs/

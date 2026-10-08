@@ -31,11 +31,19 @@ if not exist "%PY%" (
 )
 echo [环境] 使用 Python: %PY%
 
+REM 包管理器：优先 pnpm，没有就退回 npm（install / run 语法一致）
 where pnpm >nul 2>nul
 if errorlevel 1 (
-    echo [错误] 找不到 pnpm，请先安装 Node.js 与 pnpm。
-    pause
-    exit /b 1
+    where npm >nul 2>nul
+    if errorlevel 1 (
+        echo [错误] 找不到 pnpm，也没有 npm。请先安装 Node.js：https://nodejs.org
+        pause
+        exit /b 1
+    )
+    echo [提示] 未找到 pnpm，改用 npm。
+    set "PKG=npm"
+) else (
+    set "PKG=pnpm"
 )
 
 REM ---------- 从 .env 读数据库配置（不在脚本里硬编码密码）----------
@@ -72,7 +80,7 @@ echo [2/5] 检查后端依赖 ...
 "%PY%" -c "import fastapi, sqlalchemy, ortools, langgraph" >nul 2>nul
 if errorlevel 1 (
     echo       缺少依赖，正在安装 ...
-    "%PY%" -m pip install -r "%ROOT%backend\requirements.txt"
+    "%PY%" -m pip install -r "%ROOT%backend\requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple || "%PY%" -m pip install -r "%ROOT%backend\requirements.txt" -i https://mirrors.aliyun.com/pypi/simple || "%PY%" -m pip install -r "%ROOT%backend\requirements.txt" || echo       [警告] 依赖自动安装失败，请检查网络
 )
 
 echo [3/5] 检查前端依赖 ...
@@ -98,9 +106,13 @@ popd
 
 REM ---------- 启动 ----------
 echo [5/5] 启动服务 ...
-start "调度后端 8000" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py"
+start "调度后端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py"
 timeout /t 6 /nobreak >nul
-start "调度前端 5175" cmd /k "chcp 65001 >nul && cd /d "%ROOT%frontend" && pnpm run dev"
+REM 读后端实际端口（run.py 写入的 .runtime_port），让前端把 /api 代理到正确端口
+set "BPORT="
+if exist "%ROOT%backend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%backend\.runtime_port") do set "BPORT=%%p"
+if defined BPORT set "VITE_PROXY_TARGET=http://127.0.0.1:%BPORT%"
+start "调度前端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%frontend" && %PKG% run dev"
 
 echo.
 echo ============================================================

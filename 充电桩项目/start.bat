@@ -30,9 +30,19 @@ if not exist "%PY%" (
 )
 echo [环境] 使用 Python: %PY%
 
+REM 包管理器：优先 pnpm，没有就退回 npm（install / run 语法一致）
 where pnpm >nul 2>nul
 if errorlevel 1 (
-    echo [警告] 未找到 pnpm，前端将无法启动。可只跑后端。
+    where npm >nul 2>nul
+    if errorlevel 1 (
+        echo [错误] 找不到 pnpm，也没有 npm。请先安装 Node.js：https://nodejs.org
+        pause
+        exit /b 1
+    )
+    echo [提示] 未找到 pnpm，改用 npm。
+    set "PKG=npm"
+) else (
+    set "PKG=pnpm"
 )
 
 if not exist "%ENVFILE%" (
@@ -44,7 +54,7 @@ echo [1/4] 检查后端依赖 ...
 "%PY%" -c "import fastapi, sqlalchemy, langgraph, ortools, openpyxl, bcrypt, jose, aiosqlite" >nul 2>nul
 if errorlevel 1 (
     echo       缺少依赖，正在安装（首次可能需要几分钟）...
-    "%PY%" -m pip install -r "%ROOT%backend\requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple
+    "%PY%" -m pip install -r "%ROOT%backend\requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple || "%PY%" -m pip install -r "%ROOT%backend\requirements.txt" -i https://mirrors.aliyun.com/pypi/simple || "%PY%" -m pip install -r "%ROOT%backend\requirements.txt" || echo       [警告] 依赖自动安装失败，请检查网络
 ) else (
     echo       OK
 )
@@ -54,7 +64,7 @@ if not exist "%ROOT%frontend\node_modules" (
     if exist "%ROOT%frontend\package.json" (
         echo       首次运行，正在安装 ...
         pushd "%ROOT%frontend"
-        call pnpm install
+        call %PKG% install
         popd
     ) else (
         echo       [跳过] 前端尚未初始化
@@ -64,12 +74,16 @@ if not exist "%ROOT%frontend\node_modules" (
 )
 
 echo [3/4] 启动后端（首次启动会自动建库并注入演示数据，约需 20 秒）...
-start "充电桩运维后端 8010" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py"
+start "充电桩运维后端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py"
 
 echo [4/4] 启动前端 ...
+REM 读后端实际端口（run.py 写入的 .runtime_port），让前端把 /api 代理到正确端口
+set "BPORT="
+if exist "%ROOT%backend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%backend\.runtime_port") do set "BPORT=%%p"
+if defined BPORT set "VITE_API_TARGET=http://127.0.0.1:%BPORT%"
 if exist "%ROOT%frontend\package.json" (
     timeout /t 12 /nobreak >nul
-    start "充电桩运维前端 5185" cmd /k "chcp 65001 >nul && cd /d "%ROOT%frontend" && pnpm run dev"
+    start "充电桩运维前端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%frontend" && %PKG% run dev"
 )
 
 echo.

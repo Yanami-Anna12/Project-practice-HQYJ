@@ -41,13 +41,25 @@ class Base(DeclarativeBase):
 # ---------------------------------------------------------------------------
 # pool_pre_ping=True：MySQL 的 wait_timeout 默认 8 小时，长空闲连接会被服务端
 # 单方面掐断。pre_ping 在借出连接前先探活，避免 "MySQL server has gone away"。
-engine = create_engine(
-    settings.database_url,
-    echo=False,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    future=True,
-)
+if settings.db_backend == "sqlite":
+    # 回退到 SQLite 时：先确保目录存在，并关闭跨线程检查
+    # （FastAPI 在线程池里跑同步 Session，SQLite 默认禁止跨线程复用连接）
+    settings.sqlite_file.parent.mkdir(parents=True, exist_ok=True)
+    engine = create_engine(
+        settings.database_url,
+        echo=False,
+        future=True,
+        connect_args={"check_same_thread": False},
+    )
+    logger.warning("MySQL 不可用，已自动回退到本地 SQLite：%s", settings.sqlite_file)
+else:
+    engine = create_engine(
+        settings.database_url,
+        echo=False,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        future=True,
+    )
 
 SessionLocal = sessionmaker(
     bind=engine,
@@ -80,6 +92,11 @@ def ensure_database_exists() -> bool:
     MySQL 不允许在 USE 之前 CREATE DATABASE，而 engine 已经绑定了库名，
     所以必须用 server_url 另开一次无库名连接。
     """
+    if settings.db_backend != "mysql":
+        # SQLite 等文件型后端没有「建库」这一步，表由 create_all_tables() 直接建
+        logger.info("当前数据库后端为 %s，跳过建库步骤", settings.db_backend)
+        return False
+
     server_engine = create_engine(settings.server_url, future=True, pool_pre_ping=True)
     try:
         with server_engine.connect() as conn:

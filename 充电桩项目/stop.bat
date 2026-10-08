@@ -13,8 +13,8 @@ set "KILLED_PIDS="
 
 REM ---------- 1) 先按 start.bat 打开的控制台窗口标题，结束整棵进程树 ----------
 REM 这一步专治 uvicorn reload 模式：reloader 父进程会跟随窗口被 /T 一并结束。
-call :killtree "充电桩运维后端 8010"
-call :killtree "充电桩运维前端 5185"
+call :killtree "充电桩运维后端"
+call :killtree "充电桩运维前端"
 
 REM ---------- 2) 再按端口兜底（服务不是由 start.bat 启动的情况）----------
 for %%P in (8010 5185) do call :killport %%P
