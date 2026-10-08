@@ -76,6 +76,31 @@ logs/
 充电桩项目/backend/data/
 充电桩项目/backend/logs/
 
+# --------------------------------------------------------------------------
+# ★ 本地专有：本机存在、但不在远程仓库中的全部路径
+# --------------------------------------------------------------------------
+# 依据 `git ls-files --others --ignored --exclude-standard` 全量盘点得出。
+# 下面的通用规则其实已能覆盖绝大部分，这里再逐条锚定一次，
+# 作用是防止以后同名的源码文件被误忽略、或本地文件被误提交。
+# 行首的 / 表示只匹配仓库根，不会影响各项目内部的同名目录。
+#
+# 1) 旧路径残留：源码已迁到 物流项目/Project-practice-HQYJ-main/ 下
+/面向DeepseekHarness的RBAC项目开发/
+# 2) IDE 配置
+/.idea/
+# 3) 物流项目本地运行环境（远端只保留 .env.example 模板）
+/物流项目/backend/.env
+/物流项目/backend/__pycache__/
+/物流项目/backend/app/__pycache__/
+/物流项目/backend/app/models/__pycache__/
+/物流项目/backend/app/routers/__pycache__/
+/物流项目/backend/app/services/__pycache__/
+/物流项目/frontend/node_modules/
+# 4) 原始资料 PDF（体积大、非源码）
+/随堂笔记.pdf
+/车辆智能调度 Agent 项目技术方案.pdf
+/充电桩运维管理 AI Agent 项目技术方案.pdf
+
 # 物流项目的运行时数据
 物流项目/Project-practice-HQYJ-main/物流项目/backend/logs/
 物流项目/Project-practice-HQYJ-main/物流项目/frontend/logs/
@@ -97,8 +122,5 @@ Thumbs.db
 desktop.ini
 
 # --------------------------------------------------------------------------
-# 原始资料（体积大且非源码）
+# 原始资料（体积大且非源码）—— 具体规则见上方「本地专有」第 4 条
 # --------------------------------------------------------------------------
-随堂笔记.pdf
-车辆智能调度 Agent 项目技术方案.pdf
-充电桩运维管理 AI Agent 项目技术方案.pdf
