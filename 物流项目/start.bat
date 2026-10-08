@@ -8,16 +8,28 @@ echo ============================================================
 echo.
 
 set "ROOT=%~dp0"
-set "PY=C:\Users\12966\miniconda3\envs\py312\python.exe"
+REM ---------- Python 环境（自动探测，可用环境变量 PYTHON_EXE 覆盖）----------
+REM 依次尝试多个常见安装位置，避免换电脑后因盘符/用户名不同而启动失败。
+set "PY="
+if defined PYTHON_EXE set "PY=%PYTHON_EXE%"
+if not exist "%PY%" set "PY=%USERPROFILE%\miniconda3\envs\py312\python.exe"
+if not exist "%PY%" set "PY=%LOCALAPPDATA%\miniconda3\envs\py312\python.exe"
+if not exist "%PY%" set "PY=C:\ProgramData\miniconda3\envs\py312\python.exe"
+if not exist "%PY%" set "PY=C:\miniconda3\envs\py312\python.exe"
+if not exist "%PY%" set "PY=D:\miniconda3\envs\py312\python.exe"
+if not exist "%PY%" for /f "delims=" %%i in ('where python 2^>nul') do if not defined PY set "PY=%%i"
 set "ENVFILE=%ROOT%backend\.env"
 
 REM ---------- 环境检查 ----------
 if not exist "%PY%" (
-    echo [错误] 找不到 Python 3.12 环境：
-    echo        %PY%
+    echo [错误] 找不到可用的 Python 解释器。
+    echo        已尝试 PYTHON_EXE、conda 常见安装位置、以及 PATH 里的 python。
+    echo        请安装 Miniconda 并创建 py312 环境，或设置环境变量 PYTHON_EXE 指向已有解释器，
+    echo        例如：set PYTHON_EXE=C:\Users\你的用户名\miniconda3\envs\py312\python.exe
     pause
     exit /b 1
 )
+echo [环境] 使用 Python: %PY%
 
 where pnpm >nul 2>nul
 if errorlevel 1 (
@@ -103,7 +115,7 @@ echo     admin       系统管理员（全部 29 个权限）
 echo     dispatcher  调度员
 echo     viewer      只读观察者
 echo.
-echo   关闭服务：双击 stop.ps1，或直接关掉这两个黑窗口。
+echo   关闭服务：双击 stop.bat，或直接关掉这两个黑窗口。
 echo ============================================================
 timeout /t 8 /nobreak >nul
 start "" http://127.0.0.1:5175

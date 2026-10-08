@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
-title 充电桩运维管理 AI Agent - 停止器
+title 车辆智能调度 Agent - 停止器
 
 echo ============================================================
-echo   充电桩运维管理 AI Agent - 停止服务
+echo   车辆智能调度 Agent - 停止服务
 echo ============================================================
 echo.
 
@@ -13,22 +13,22 @@ set "KILLED_PIDS="
 
 REM ---------- 1) 先按 start.bat 打开的控制台窗口标题，结束整棵进程树 ----------
 REM 这一步专治 uvicorn reload 模式：reloader 父进程会跟随窗口被 /T 一并结束。
-call :killtree "充电桩运维后端 8010"
-call :killtree "充电桩运维前端 5185"
+call :killtree "调度后端 8000"
+call :killtree "调度前端 5175"
 
 REM ---------- 2) 再按端口兜底（服务不是由 start.bat 启动的情况）----------
-for %%P in (8010 5185) do call :killport %%P
+for %%P in (8000 5175) do call :killport %%P
 
 echo.
 if "%KILLED%%FAILED%"=="00" (
-    echo   没有需要停止的进程（端口 8010 / 5185 都空闲）。
+    echo   没有需要停止的进程（端口 8000 / 5175 都空闲）。
 ) else (
     echo   已结束 %KILLED% 个进程，失败 %FAILED% 个。
     if not "%FAILED%"=="0" echo   失败通常是权限不足：请右键本文件，选择“以管理员身份运行”。
     echo   提示：如果之前 start.bat 开的黑窗口还留着，直接关掉它们也可以。
 )
-call :check 8010
-call :check 5185
+call :check 8000
+call :check 5175
 echo.
 pause
 exit /b 0
