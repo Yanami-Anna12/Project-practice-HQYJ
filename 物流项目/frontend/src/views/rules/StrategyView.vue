@@ -40,7 +40,7 @@ const softConstraints = computed(() => overview.value?.soft_constraints || [])
 const scoreFunction = computed(() => overview.value?.score_function || {})
 
 const TERRAIN_LABEL = { normal: '普通', medium: '中控', strict: '严控' }
-const CAP_LABEL = { all: '全能去', big_small: '大小包能去', small_only: '小包能去' }
+const CAP_LABEL = { all: '4m2', big_small: '大包', small_only: '小包' }
 
 /** 通行矩阵按地形分组，便于紧凑展示 */
 const matrixByTerrain = computed(() => {

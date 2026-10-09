@@ -12,11 +12,13 @@ export const TERRAIN_TYPE = {
   strict: { text: '严控', type: 'danger' },
 }
 
-/** 车辆地形能力 */
+/** 车辆地形能力（列名按车型展示：
+ *  all = 4.2m 车 / big_small = 大包车 / small_only = 小包车，
+ *  与 seed.py 的 {"4.2m": "all", "big": "big_small", "small": "small_only"} 对应）*/
 export const TERRAIN_CAPABILITY = {
-  all: { text: '全能去', type: 'success' },
-  big_small: { text: '大小包能去', type: 'warning' },
-  small_only: { text: '小包能去', type: 'info' },
+  all: { text: '4m2', type: 'success' },
+  big_small: { text: '大包', type: 'warning' },
+  small_only: { text: '小包', type: 'info' },
 }
 
 /** 配送时段 */
