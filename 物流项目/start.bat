@@ -48,10 +48,10 @@ if errorlevel 1 (
 
 REM ---------- 从 .env 读数据库配置（不在脚本里硬编码密码）----------
 if not exist "%ENVFILE%" (
-    echo [错误] 找不到配置文件：%ENVFILE%
-    echo        请先复制 .env.example 为 .env 并按本机情况修改。
-    pause
-    exit /b 1
+    echo [提示] 未找到 backend\.env，正在从 .env.example 自动生成 ...
+    copy /y "%ROOT%backend\.env.example" "%ENVFILE%" >nul
+    echo [注意] 数据库密码用的是模板里的占位值，若连不上 MySQL 请改 %ENVFILE% 里的 DB_PASSWORD。
+    echo        本机若已装 MySQL 且密码不同，改完重新运行本脚本即可；不装 MySQL 也能跑（会自动回退 SQLite）。
 )
 
 for /f "usebackq tokens=1,* delims==" %%a in ("%ENVFILE%") do (
