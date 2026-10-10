@@ -61,7 +61,27 @@ for /f "usebackq tokens=1,* delims==" %%a in ("%ENVFILE%") do (
 )
 
 echo [1/5] 检查 MySQL ...
-set "MYSQL_EXE=C:\MySQL\MySQL Server 8.0\bin\mysql.exe"
+REM ---------- 自动搜索 mysql.exe（别写死路径：不同机器可能装在 C:\MySQL、
+REM            C:\Program Files\MySQL、D:\... 或只在 PATH 里）----------
+set "MYSQL_EXE="
+for %%M in (
+    "%ProgramFiles%\MySQL\MySQL Server 8.0\bin\mysql.exe"
+    "%ProgramFiles%\MySQL\MySQL Server 8.4\bin\mysql.exe"
+    "%ProgramFiles(x86)%\MySQL\MySQL Server 8.0\bin\mysql.exe"
+    "C:\MySQL\MySQL Server 8.0\bin\mysql.exe"
+    "D:\MySQL\MySQL Server 8.0\bin\mysql.exe"
+    "D:\mysql\bin\mysql.exe"
+    "C:\mysql\bin\mysql.exe"
+    "C:\xampp\mysql\bin\mysql.exe"
+    "D:\xampp\mysql\bin\mysql.exe"
+) do if not defined MYSQL_EXE if exist %%M set "MYSQL_EXE=%%~M"
+if not defined MYSQL_EXE for /f "delims=" %%i in ('where mysql 2^>nul') do if not defined MYSQL_EXE set "MYSQL_EXE=%%i"
+REM 再兜一层：从注册表读 MySQL Server 的安装位置
+if not defined MYSQL_EXE (
+    for /f "tokens=2,*" %%a in ('reg query "HKLM\SOFTWARE\MySQL AB" /s /v Location 2^>nul ^| findstr /i "MySQL Server"') do (
+        if not defined MYSQL_EXE if exist "%%b\bin\mysql.exe" set "MYSQL_EXE=%%b\bin\mysql.exe"
+    )
+)
 if exist "%MYSQL_EXE%" (
     set "MYSQL_PWD=%DB_PASSWORD%"
     "%MYSQL_EXE%" -u %DB_USER% --connect-timeout=4 -e "SELECT 1;" >nul 2>nul
