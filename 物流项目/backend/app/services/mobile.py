@@ -64,6 +64,7 @@ from app.models import (
 from app.schemas import (
     MobileCheckinRequest,
     MobileCheckinResult,
+    MobileCompletionStatOut,
     MobileExceptionBriefOut,
     MobileExceptionCreate,
     MobileExceptionOut,
@@ -74,6 +75,7 @@ from app.schemas import (
     MobileProfileOut,
     MobileTaskStatOut,
     MobileTripAcceptResult,
+    MobileTripBriefOut,
     MobileTripDetailOut,
     MobileTripOut,
     MobileTripStatOut,
@@ -233,12 +235,20 @@ def _vehicle_type_names(db: Session) -> dict[str, str]:
 # 我的趟次
 # ---------------------------------------------------------------------------
 def _dispatched_details_stmt(driver_vehicle_ids: list[int]):
-    """司机名下车辆「已下发」的计划明细查询。
+    """司机名下车辆「已下发（含已完成）」的计划明细查询。
 
-    只认 `scheduling_plan_detail.status == 'dispatched'`：
-    `dispatch_task` 下发成功时会把对应明细置为 dispatched，它就是
-    「这一趟已经派给这辆车」的事实来源。同时要求其所属任务处于
-    dispatched / completed（避免任务被驳回后明细状态残留仍被司机看到）。
+    ★ 状态范围为什么是 dispatched / arrived / done 三个，而不是只认 dispatched：
+
+      `dispatch_task` 下发时把明细置为 dispatched，之后司机打卡会把状态往前推
+      （dispatched → arrived → done）。**如果这里只筛 'dispatched'，司机一打完
+      「离店/完成」卡，这一趟就从列表里消失了** —— 现场反馈正是这个：
+      「完成本单之后能不能保留记录，不要删掉了」。
+
+      所以：已下发过的趟次一律保留在列表里，`done` 的排到最后（见 my_trips 的排序），
+      司机既能看见今天还要跑几趟，也能回看刚跑完的那趟送去哪几家。
+
+    ★ 仍然要求任务处于 dispatched / completed：
+      任务被人工驳回（退回 pending_confirm）后，明细状态可能残留，不该再展示。
     """
     return (
         select(SchedulingPlanDetail)
@@ -246,9 +256,45 @@ def _dispatched_details_stmt(driver_vehicle_ids: list[int]):
         .join(SchedulingTask, SchedulingTask.id == SchedulingPlan.task_id)
         .where(
             SchedulingPlanDetail.vehicle_id.in_(driver_vehicle_ids),
-            SchedulingPlanDetail.status == DETAIL_DISPATCHED,
+            SchedulingPlanDetail.status.in_([DETAIL_DISPATCHED, DETAIL_ARRIVED, DETAIL_DONE]),
             SchedulingTask.status.in_(["dispatched", "completed"]),
         )
+    )
+
+
+def _trip_sort_key(trip: MobileTripOut) -> tuple:
+    """趟次列表的排序：**红的排最上面，绿的沉到最后**。
+
+    顺序：日期新 → 状态（未确认 → 已接单未完成 → 已完成）→ 上午先于下午 → 趟次号小 → 车牌。
+
+    ★ 三色状态与前端卡片颜色、标签是同一套口径（用户明确要求）：
+      · 未确认接单（红）—— 需要司机动手，**排最上面**
+      · 已确认但没跑完（黄）—— 已经在手上，排中间
+      · 已完成（绿）—— 可以回看，**沉到最下面**
+
+    ★ 为什么「日期」仍排在第一个：日期是司机找活的第一维度，先按日期分组更符合
+      直觉。若把状态提到日期之前，前天那张没确认的红卡会一直压住今天整天的活。
+      （以后若要「跨日期把所有红卡置顶」，把下面 `state_rank` 与
+      `-toordinal()` 两项换位即可，其余不动。）
+
+    ★ 日期用 `-toordinal()` 取负，才能和整数 rank 放同一个升序 key：
+      取负后「日期新」等价于数值小，排在前面。
+    """
+    window_rank = {"AM": 0, "PM": 1, "FULL": 0}.get(trip.time_window, 9)
+    # 三色状态的排序权重：0 红 → 1 黄 → 2 绿
+    state_rank = (
+        2
+        if trip.trip_status == TRIP_STATUS_DONE
+        else 1
+        if trip.accepted
+        else 0
+    )
+    return (
+        -trip.schedule_date.toordinal(),
+        state_rank,
+        window_rank,
+        trip.trip_no,
+        trip.plate_no,
     )
 
 
@@ -306,6 +352,19 @@ def my_trips(
         db,
         [p.task_id for p in plans.values()],
     )
+
+    # ★ 「这辆车当天一共跑几趟」：按 (日期, 车辆) 数出实际存在的 trip_no 个数。
+    #   为什么不能直接用车型规则里的 trips_per_day：那是**计划的**上限，
+    #   实际排几趟由求解器按货量决定，可能少于上限（例如 4.2m 车当天只排了 1 趟）。
+    #   司机要看到的是「今天这辆车实际一共几趟」，所以按明细实际去重数出来。
+    trip_nos_by_vehicle: dict[tuple[date, int], set[int]] = {}
+    for (plan_id, vehicle_id, trip_no) in grouped:
+        plan = plans.get(plan_id)
+        task = tasks.get(plan.task_id) if plan is not None else None
+        if task is None:
+            continue
+        trip_nos_by_vehicle.setdefault((task.schedule_date, vehicle_id), set()).add(trip_no)
+
     out: list[MobileTripOut] = []
     for (plan_id, vehicle_id, trip_no), rows in grouped.items():
         plan = plans.get(plan_id)
@@ -339,12 +398,17 @@ def my_trips(
                 done_stores=done,
                 arrived_stores=arrived,
                 trip_status=_trip_status(len(rows), done, arrived),
+                vehicle_trip_count=len(
+                    trip_nos_by_vehicle.get((task.schedule_date, vehicle_id), set())
+                ),
                 accepted=accepted_at is not None,
                 accepted_at=accepted_at,
             )
         )
 
-    out.sort(key=lambda t: (t.schedule_date, t.time_window, t.trip_no), reverse=True)
+    # ★ 排序见 _trip_sort_key：还要跑的排最前，**跑完的沉到最底下**
+    #   （用户要求「完成的记录别删掉，放到最下面」）。
+    out.sort(key=_trip_sort_key)
     return out
 
 
@@ -1291,21 +1355,194 @@ def manager_overview(db: Session, schedule_date: date | None = None) -> MobileMa
     )
     by_status = {str(status): int(count) for status, count in task_rows}
     tasks = MobileTaskStatOut(total=sum(by_status.values()), by_status=by_status)
+    # 当日任务 id：下面「趟次/接单」「执行完成情况」「在途车辆」都要按日期限定范围，
+    # 所以在这里先算一次，避免每组各查一遍（也避免漏掉某一组）。
+    day_task_ids = [
+        row[0]
+        for row in db.query(SchedulingTask.id)
+        .filter(SchedulingTask.schedule_date == target_date)
+        .all()
+    ]
 
     # --- 趟次（下发记录）与接单情况 ---
-    dispatch_total = db.query(func.count(DispatchRecord.id)).scalar() or 0
-    accepted_total = (
+    # ★ 拆成两个数（老代码只有一个全表 total，导致「换日期看，趟次数永远一样」）：
+    #   · day_dispatch_total  —— 当日任务的已下发趟次，**看板各卡片都用它**；
+    #   · all_dispatch_total  —— 全表累计，只作为「累计」参考展示。
+    all_dispatch_total = db.query(func.count(DispatchRecord.id)).scalar() or 0
+    day_dispatch_total = (
         db.query(func.count(DispatchRecord.id))
-        .filter(DispatchRecord.accepted_at.isnot(None))
+        .filter(DispatchRecord.task_id.in_(day_task_ids))
+        .scalar()
+        or 0
+    )
+    day_accepted_total = (
+        db.query(func.count(DispatchRecord.id))
+        .filter(
+            DispatchRecord.task_id.in_(day_task_ids),
+            DispatchRecord.accepted_at.isnot(None),
+        )
         .scalar()
         or 0
     )
     trips = MobileTripStatOut(
-        total=int(dispatch_total),
-        accepted=int(accepted_total),
-        pending=int(dispatch_total) - int(accepted_total),
-        dispatch_records=int(dispatch_total),
+        total=int(day_dispatch_total),
+        accepted=int(day_accepted_total),
+        pending=int(day_dispatch_total) - int(day_accepted_total),
+        dispatch_records=int(day_dispatch_total),
+        all_time= int(all_dispatch_total),
     )
+
+    # --- 执行完成情况（今天跑完了多少趟）---
+    # ★ 只统计**真正下发过的趟次**（有 dispatch_record 的那些），两个原因：
+    #   ① 一次调度产出 A/B/C/D 多套方案，它们共用同一批车与趟次号；
+    #      按全部方案统计会把活算成 4 倍（实测：4 套方案 83 趟 vs 实际下发 47 趟）。
+    #   ② dispatch_record 的条数就是「下发的趟次数」，和同一张看板上
+    #      trips.total 口径一致，两个数字能对上，不会自相矛盾。
+    #   ★ 范围严格限定在**当日任务**：老实现里 dispatch_total 是全表计数
+    #   （不带日期），换个日期看会把别的天的活算进来。
+    #   ★ 没有 `if task_ids` 兜底：`in_([])` 在 SQLAlchemy 里编译成
+    #   「不匹配任何行」的假条件，正是我们要的语义（当天没任务 → 无完成情况）。
+    completion = MobileCompletionStatOut()
+    trip_briefs: list[MobileTripBriefOut] = []
+    dispatched_keys = set()
+    # trip_id 形如 task:plan:vehicle:trip，这里只需要它的 trip_no 段；
+    # plan_id / vehicle_id 直接取 dispatch_record 自己的列，不重复解析。
+    # 顺带记下「这一趟司机接单了没、是哪个任务、哪个方案」——
+    # 趟次明细卡要展示这些，免得再查一遍 dispatch_record。
+    dispatch_meta: dict[tuple[int, int, int], tuple[bool, int, int]] = {}
+    for plan_id, trip_id, vehicle_id, accepted_at, task_id in (
+        db.query(
+            DispatchRecord.plan_id,
+            DispatchRecord.trip_id,
+            DispatchRecord.vehicle_id,
+            DispatchRecord.accepted_at,
+            DispatchRecord.task_id,
+        )
+        .filter(DispatchRecord.task_id.in_(day_task_ids))
+        .all()
+    ):
+        parts = str(trip_id).split(":")
+        trip_no = int(parts[3]) if len(parts) == 4 and parts[3].isdigit() else 0
+        key = (plan_id, vehicle_id, trip_no)
+        dispatched_keys.add(key)
+        dispatch_meta[key] = (accepted_at is not None, task_id, plan_id)
+
+    if day_task_ids and dispatched_keys:
+        detail_rows = (
+            db.query(
+                SchedulingPlanDetail.plan_id,
+                SchedulingPlanDetail.vehicle_id,
+                SchedulingPlanDetail.trip_no,
+                SchedulingPlanDetail.time_window,
+                SchedulingPlanDetail.status,
+                func.count(SchedulingPlanDetail.id),
+            )
+            .filter(
+                SchedulingPlanDetail.plan_id.in_({k[0] for k in dispatched_keys}),
+                SchedulingPlanDetail.status.in_(
+                    [DETAIL_DISPATCHED, DETAIL_ARRIVED, DETAIL_DONE]
+                ),
+            )
+            .group_by(
+                SchedulingPlanDetail.plan_id,
+                SchedulingPlanDetail.vehicle_id,
+                SchedulingPlanDetail.trip_no,
+                SchedulingPlanDetail.time_window,
+                SchedulingPlanDetail.status,
+            )
+            .all()
+        )
+        # 先把「明细行」聚合到「趟次」：一趟完成 = 该趟所有门店都 done。
+        # per_trip 顺便承载下面趟次明细卡要用的门店数/时段，一次查询两用。
+        per_trip: dict[tuple[int, int, int], dict[str, Any]] = {}
+        for plan_id, vehicle_id, trip_no, time_window, status, count in detail_rows:
+            key = (plan_id, vehicle_id, trip_no)
+            if key not in dispatched_keys:
+                continue  # 只在真正下发过的趟次里统计
+            bucket = per_trip.setdefault(
+                key, {"status": {}, "time_window": str(time_window)}
+            )
+            bucket["status"][str(status)] = int(count)
+
+        # 车辆 / 司机 / 任务号：明细卡要显示「哪台车、谁开、哪个任务」
+        vehicle_ids = {k[1] for k in per_trip}
+        vehicles = {
+            v.id: v
+            for v in db.query(Vehicle).filter(Vehicle.id.in_(vehicle_ids)).all()
+        } if vehicle_ids else {}
+        driver_ids = {v.driver_id for v in vehicles.values() if v.driver_id}
+        drivers = {
+            d.id: d.name
+            for d in db.query(Driver).filter(Driver.id.in_(driver_ids)).all()
+        } if driver_ids else {}
+        # 任务号只有当日任务，取一次给明细卡用（下面「最近异常」另有一份，避免重名）
+        trip_task_codes = {
+            t.id: t.code
+            for t in db.query(SchedulingTask)
+            .filter(SchedulingTask.id.in_(day_task_ids))
+            .all()
+        }
+
+        for key, bucket in per_trip.items():
+            counts = bucket["status"]
+            total_stores = sum(counts.values())
+            done_stores = sum(n for s, n in counts.items() if s in DETAIL_DONE_ALIASES)
+            arrived_stores = counts.get(DETAIL_ARRIVED, 0)
+            completion.trips_total += 1
+            completion.stores_total += total_stores
+            completion.stores_done += done_stores
+            if total_stores and done_stores >= total_stores:
+                completion.finished += 1
+            elif done_stores or arrived_stores:
+                completion.running += 1
+            else:
+                completion.not_started += 1
+
+            # 「趟次明细」：看板最上面那块要逐趟显示，所以在这里顺手拼好。
+            # ★ 一趟一条（不是一店一条）—— 47 趟 / 61 店，逐店列会把看板撑爆。
+            plan_id, vehicle_id, trip_no = key
+            accepted, task_id, _plan = dispatch_meta.get(key, (False, 0, plan_id))
+            vehicle = vehicles.get(vehicle_id)
+            driver_id = vehicle.driver_id if vehicle else None
+            if total_stores and done_stores >= total_stores:
+                state = "done"
+            elif done_stores or arrived_stores:
+                state = "running"
+            elif accepted:
+                # 已接单但一个门店都没打卡 —— 司机接了活正在路上/还没出发
+                state = "accepted"
+            else:
+                state = "pending"
+            trip_briefs.append(
+                MobileTripBriefOut(
+                    trip_key=f"{task_id}:{plan_id}:{vehicle_id}:{trip_no}",
+                    task_id=task_id,
+                    task_code=trip_task_codes.get(task_id, ""),
+                    plan_id=plan_id,
+                    trip_no=trip_no,
+                    time_window=bucket["time_window"],
+                    vehicle_id=vehicle_id,
+                    plate_no=vehicle.plate_no if vehicle else "",
+                    driver_name=drivers.get(driver_id, "") if driver_id else "",
+                    store_count=total_stores,
+                    done_stores=done_stores,
+                    arrived_stores=arrived_stores,
+                    accepted=accepted,
+                    state=state,
+                )
+            )
+
+        # 排序：**要盯的排前面** —— 正在跑 → 已接单未出车 → 未确认 → 已完成。
+        # 同一状态里按车牌 + 趟次号，方便按车核对（与司机端「三色」语义一致：
+        # 红/黄在上面，绿沉底，只是这里把「已接单」和「未接单」分得更细）。
+        state_rank = {"running": 0, "accepted": 1, "pending": 2, "done": 3}
+        trip_briefs.sort(
+            key=lambda t: (
+                state_rank.get(t.state, 9),
+                t.plate_no,
+                t.trip_no,
+            )
+        )
 
     # --- 在途车辆 ---
     # 「在途」= 有趟次已下发、但该趟还有门店没跑完（kpi：现在路上有几台车在干活）。
@@ -1368,6 +1605,8 @@ def manager_overview(db: Session, schedule_date: date | None = None) -> MobileMa
         generated_at=datetime.now(),
         tasks=tasks,
         trips=trips,
+        completion=completion,
+        trip_briefs=trip_briefs,
         vehicles=vehicles,
         exceptions=exceptions,
         recent_exceptions=recent,

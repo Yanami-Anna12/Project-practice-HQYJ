@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from concurrent.futures import TimeoutError as FuturesTimeout
 from datetime import datetime
 from typing import Any, Iterable
 
@@ -152,15 +153,37 @@ def build_notification_payload(
     }
 
 
-def publish_to_users(user_ids: Iterable[int], payload: dict[str, Any]) -> None:
-    """把报文投递给若干用户（同步上下文安全，永不抛异常）。
+def publish_to_users(
+    user_ids: Iterable[int], payload: dict[str, Any], wait_seconds: float = 2.0
+) -> None:
+    """把报文投递给若干用户（同步上下文安全，永不抛异常，**永不长时间阻塞**）。
 
-    ★ 刻意不等待投递结果：调用方是「下发执行」的 HTTP 请求线程，
-      它不该为了推送多等一个网络往返。真要有连接是坏的，
-      `NotificationHub.send_to_user` 自己会摘掉。
+    ★ 刻意不等待投递**结果**：调用方是业务请求的 HTTP 线程，它不该为了推送
+      多等一个网络往返。真要有连接是坏的，`NotificationHub.send_to_user`
+      自己会摘掉。
+
+    ★★ `wait_seconds` 这个上限是**必须**的，不是保险丝：
+
+       `run_coroutine_threadsafe` 返回的是 concurrent.futures.Future，
+       如果**不 await 也不 wait**，它被回收时会打日志；而如果调用方
+       直接 `future.result()`（没超时），一旦事件循环里有连接处于
+       「已断开但还没摘除」的状态（手机切网、进程被杀都会这样），
+       这个线程就会被无限期卡住 —— 表现是**业务接口永远不返回**，
+       但数据库其实早就改完了。这个坑真实踩到过：
+       「撤销下发」接口 120 秒超时，而库里任务状态已经退回 confirmed。
+
+       所以这里：没连接直接返回（最常见，一行都不做）；有连接就给一个
+       2 秒的上限，超时就放弃等待并记日志 —— 推送是锦上添花，
+       绝不能反过来拖住业务。
     """
     targets = {int(uid) for uid in user_ids if uid is not None}
     if not targets:
+        return
+
+    # 一个连接都没有（司机全离线）时直接返回：既省一次跨线程投递，
+    # 也避免在没有活跃 WebSocket 时去碰事件循环。
+    if hub.connection_count == 0:
+        logger.debug("实时推送跳过：当前没有在线连接")
         return
 
     loop = _loop
@@ -173,9 +196,21 @@ def publish_to_users(user_ids: Iterable[int], payload: dict[str, Any]) -> None:
             return
 
     try:
-        asyncio.run_coroutine_threadsafe(hub.send_to_users(targets, payload), loop)
+        future = asyncio.run_coroutine_threadsafe(hub.send_to_users(targets, payload), loop)
     except Exception as exc:  # noqa: BLE001 —— 推送失败绝不影响业务主流程
         logger.warning("实时推送投递失败（不影响主流程）：%s", exc)
+        return
+
+    try:
+        future.result(timeout=wait_seconds)
+    except FuturesTimeout:
+        logger.warning(
+            "实时推送超过 %.1fs 未完成，放弃等待（消息已入库，不影响业务）：%s 个收件人",
+            wait_seconds,
+            len(targets),
+        )
+    except Exception as exc:  # noqa: BLE001 —— 同上，投递异常只记日志
+        logger.warning("实时推送执行异常（不影响主流程）：%s", exc)
 
 
 def publish_notification(

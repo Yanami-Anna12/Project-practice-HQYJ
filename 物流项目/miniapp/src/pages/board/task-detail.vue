@@ -26,6 +26,7 @@ import {
   taskStatusClass,
   taskStatusText,
   timeWindowLabel,
+  tripStatusText,
 } from '@/utils/format'
 import { requireLogin } from '@/utils/ui'
 
@@ -42,11 +43,16 @@ const plans = computed(() => (detail.value && detail.value.plans) || [])
 const currentPlan = computed(() => plans.value.find((p) => p.id === planId.value) || null)
 const current = computed(() => planCache.value[planId.value] || { loading: false, error: '', trips: [] })
 
-/** 当前方案的趟次汇总（未确认趟次单独提示） */
+/** 当前方案的趟次汇总：完成情况 + 接单情况（两组口径分别算，互不替代） */
 const tripSummary = computed(() => {
   const trips = current.value.trips || []
   return {
     total: trips.length,
+    // 完成情况：一趟跑完 = 该趟所有门店都打完卡（trip_status 由 groupPlanTrips 推导）
+    finished: trips.filter((t) => t.trip_status === 'done').length,
+    running: trips.filter((t) => t.trip_status === 'running').length,
+    notStarted: trips.filter((t) => t.trip_status !== 'done' && t.trip_status !== 'running').length,
+    // 接单情况：司机有没有点「确认收到」
     accepted: trips.filter((t) => t.accepted).length,
     pending: trips.filter((t) => !t.accepted).length,
   }
@@ -200,8 +206,10 @@ onLoad((options) => {
       <template v-else>
         <view class="card trip-summary">
           <text>共 {{ tripSummary.total }} 趟 ·</text>
-          <text class="ok-text"> 已确认 {{ tripSummary.accepted }} 趟</text>
-          <text :class="tripSummary.pending ? 'warn-text' : ''"> · 待确认 {{ tripSummary.pending }} 趟</text>
+          <text class="ok-text"> 已完成 {{ tripSummary.finished }} 趟</text>
+          <text :class="tripSummary.running ? 'info-text' : ''"> · 在跑 {{ tripSummary.running }} 趟</text>
+          <text :class="tripSummary.notStarted ? 'warn-text' : ''"> · 未出车 {{ tripSummary.notStarted }} 趟</text>
+          <text> · 已确认 {{ tripSummary.accepted }} 趟</text>
         </view>
 
         <view v-if="!current.trips.length" class="card muted">该方案没有趟次明细</view>
@@ -224,7 +232,19 @@ onLoad((options) => {
             <text class="row-value">{{ trip.store_count }} 家 · {{ trip.total_load }} 件</text>
           </view>
           <view class="row">
-            <text class="row-label">已确认接单</text>
+            <text class="row-label">完成情况</text>
+            <text class="row-value">
+              <text
+                class="tag"
+                :class="trip.trip_status === 'done' ? 'tag-done' : trip.trip_status === 'running' ? 'tag-accepted' : 'tag-planned'"
+              >
+                {{ tripStatusText(trip) }}
+              </text>
+              <text class="muted"> 门店 {{ trip.done_stores }}/{{ trip.store_count }}</text>
+            </text>
+          </view>
+          <view class="row">
+            <text class="row-label">确认接单</text>
             <text class="row-value">
               <text class="tag" :class="acceptStatusClass(trip)">{{ acceptStatusText(trip) }}</text>
             </text>
@@ -323,6 +343,10 @@ onLoad((options) => {
 
 .ok-text {
   color: #18a058;
+}
+
+.info-text {
+  color: #1668dc;
 }
 
 .warn-text {

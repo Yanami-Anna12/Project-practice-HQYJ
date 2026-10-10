@@ -11,8 +11,8 @@
  *   CP-SAT 较慢，页面上的「超时」参数控制每套方案的求解上限。
  */
 import { computed, onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Refresh, MagicStick, View, Document } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh, MagicStick, View, Document, RefreshLeft } from '@element-plus/icons-vue'
 import * as api from '@/api'
 import { withError, tryAction } from '@/utils/error'
 import { taskStatus, vehicleTypeCode, timeWindow } from '@/utils/enums'
@@ -20,6 +20,8 @@ import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 const canCreate = computed(() => auth.has('scheduling:create'))
+/** 撤销下发用的权限与下发同一口径（都是「动已确认的安排」） */
+const canUndo = computed(() => auth.has('scheduling:confirm'))
 
 const scheduleDate = ref(toISO(new Date(Date.now() + 86400000)))
 function toISO(d) {
@@ -126,14 +128,41 @@ const tripGroups = computed(() => {
         time_window: d.time_window,
         stores: [],
         load: 0,
+        done: 0,
+        arrived: 0,
+        accepted: !!d.accepted,
       }
     }
     map[key].stores.push(d)
     map[key].load += d.load_amount
+    // 站点级状态：done/completed = 已完成，arrived = 已到店
+    if (d.status === 'done' || d.status === 'completed') map[key].done += 1
+    else if (d.status === 'arrived') map[key].arrived += 1
   }
   return Object.values(map).sort(
     (a, b) => a.plate_no.localeCompare(b.plate_no) || a.trip_no - b.trip_no,
   )
+})
+
+/**
+ * 当前方案的执行进度（调度在网页端也要能看到「跑完多少」）。
+ *
+ * ★ 口径与司机端一致：一趟「已完成」= 该趟所有门店都打完卡。
+ *   趟次粒度和门店粒度都给：只有趟次粒度时，「跑了 3 家还剩 1 家」看不见。
+ */
+const planProgress = computed(() => {
+  const trips = tripGroups.value
+  const stores = details.value
+  const doneStores = stores.filter((d) => d.status === 'done' || d.status === 'completed').length
+  return {
+    trips: trips.length,
+    finished: trips.filter((t) => t.stores.length && t.done >= t.stores.length).length,
+    running: trips.filter((t) => t.done < t.stores.length && (t.done || t.arrived)).length,
+    stores: stores.length,
+    doneStores,
+    accepted: trips.filter((t) => t.accepted).length,
+    doneRate: stores.length ? Math.round((doneStores / stores.length) * 100) : 0,
+  }
 })
 
 /* ---------------- 报告 ---------------- */
@@ -151,6 +180,46 @@ async function openReport(task) {
   } finally {
     reportLoading.value = false
   }
+}
+
+/* ---------------- 撤销下发 ---------------- */
+/**
+ * 撤销下发：把发下去的趟次收回，任务退回「已确认」。
+ *
+ * ★ 这里刻意**不做删除任务**（也不是删数据）：任务、方案、计划明细全部保留。
+ *   撤销的是「下发这个动作」—— 收回 dispatch_record、撤回司机站内消息、
+ *   把未执行的明细退回 planned，然后就可以重新选方案下发。
+ * ★ 已经打卡执行的趟次不会受影响，后端会在返回消息里说明收回了多少、
+ *   保留了多少，所以这里直接把 message 原样弹出来，不自己拼文案。
+ */
+const undoingId = ref(null)
+
+async function undoDispatchTask(task) {
+  try {
+    await ElMessageBox.confirm(
+      `确定撤销任务「${task.code}」的下发？\n\n` +
+        '· 发给司机的趟次与站内消息会被收回，任务退回「已确认」，可重新下发；\n' +
+        '· 任务、方案与计划明细全部保留，司机已打卡执行的趟次不受影响。',
+      '撤销下发',
+      {
+        type: 'warning',
+        confirmButtonText: '撤销下发',
+        cancelButtonText: '取消',
+      },
+    )
+  } catch {
+    return
+  }
+
+  undoingId.value = task.id
+  const { ok, result } = await tryAction(() => api.undoDispatch(task.id), null)
+  undoingId.value = null
+  if (!ok) return
+
+  ElMessage.success(result.message)
+  await loadTasks()
+  // 列表里的状态变了，详情卡片如果正开着同一个任务也要跟着刷新
+  if (detail.value?.task?.id === task.id) await openTask(task)
 }
 
 const statusMeta = (s) => taskStatus(s)
@@ -294,6 +363,17 @@ onMounted(async () => {
           <span class="muted">
             求解耗时 {{ detail.task.duration_ms }}ms · 规则版本 {{ detail.task.rule_version }}
           </span>
+          <el-button
+            v-if="canUndo && ['dispatched', 'completed'].includes(detail.task.status)"
+            type="danger"
+            plain
+            size="small"
+            :icon="RefreshLeft"
+            :loading="undoingId === detail.task.id"
+            @click="undoDispatchTask(detail.task)"
+          >
+            撤销下发
+          </el-button>
         </div>
       </template>
 
@@ -388,10 +468,22 @@ onMounted(async () => {
         </el-table-column>
         <el-table-column prop="created_by" label="创建人" width="100" />
         <el-table-column prop="solver_note" label="求解说明" min-width="240" show-overflow-tooltip />
-        <el-table-column label="操作" width="130" fixed="right">
+        <el-table-column label="操作" width="230" fixed="right">
           <template #default="{ row }">
             <el-button size="small" type="primary" link @click="openTask(row)">查看</el-button>
             <el-button size="small" link :icon="Document" @click="openReport(row)">报告</el-button>
+            <!-- 只有已下发的任务才有「撤销下发」；未下发的任务没有可收回的东西 -->
+            <el-button
+              v-if="canUndo && ['dispatched', 'completed'].includes(row.status)"
+              size="small"
+              type="danger"
+              link
+              :icon="RefreshLeft"
+              :loading="undoingId === row.id"
+              @click="undoDispatchTask(row)"
+            >
+              撤销下发
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -412,6 +504,25 @@ onMounted(async () => {
             <strong>同一门店可能出现在多个趟次里</strong> —— 单店货量超过单车容量时需要拆单配送。
           </template>
         </el-alert>
+
+        <!-- 执行进度：调度最关心的「这一版安排跑得怎么样」 -->
+        <div class="progress-box">
+          <div class="progress-line">
+            <span class="progress-strong">已完成 {{ planProgress.finished }} / {{ planProgress.trips }} 趟</span>
+            <span class="muted">
+              · 正在跑 {{ planProgress.running }} 趟 · 已接单 {{ planProgress.accepted }} 趟
+            </span>
+          </div>
+          <el-progress
+            :percentage="planProgress.doneRate"
+            :stroke-width="14"
+            :color="planProgress.doneRate === 100 ? '#67c23a' : '#409eff'"
+          />
+          <div class="muted progress-note">
+            门店完成度 {{ planProgress.doneStores }} / {{ planProgress.stores }} 家
+            （一趟跑完 = 该趟所有门店都打完卡；「正在跑」= 有门店到店但没跑完）
+          </div>
+        </div>
 
         <el-table :data="tripGroups" stripe max-height="520">
           <el-table-column label="车辆" width="110">
@@ -442,6 +553,24 @@ onMounted(async () => {
                 class="ml-sm"
               >
                 {{ timeWindow(row.time_window).text }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <!-- 执行进度：这一趟跑了几家（站点级状态来自司机端打卡） -->
+          <el-table-column label="进度" width="130">
+            <template #default="{ row }">
+              <el-tag
+                v-if="row.stores.length && row.done >= row.stores.length"
+                type="success"
+                size="small"
+              >
+                已完成 {{ row.done }}/{{ row.stores.length }}
+              </el-tag>
+              <el-tag v-else-if="row.done || row.arrived" type="warning" size="small">
+                进行中 {{ row.done }}/{{ row.stores.length }}
+              </el-tag>
+              <el-tag v-else size="small" effect="plain">
+                未开始 0/{{ row.stores.length }}
               </el-tag>
             </template>
           </el-table-column>
@@ -574,6 +703,27 @@ onMounted(async () => {
 .replan-warn {
   color: #e6a23c;
   font-weight: 600;
+}
+
+.progress-box {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: #f5f7fa;
+  border-radius: 6px;
+}
+
+.progress-line {
+  margin-bottom: 8px;
+}
+
+.progress-strong {
+  font-weight: 600;
+}
+
+.progress-note {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .report {

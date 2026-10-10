@@ -14,7 +14,7 @@ import { onLaunch, onShow } from '@dcloudio/uni-app'
 import * as api from '@/api'
 import { getToken } from '@/utils/storage'
 import { bindNetworkWatcher, connectSocket, subscribeNotifications } from '@/utils/socket'
-import { setUnread } from '@/utils/ui'
+import { setUnread, unreadFromPayload } from '@/utils/ui'
 
 /** 兜底：推送报文里没带未读数时，自己查一次 */
 async function refreshUnread() {
@@ -35,10 +35,13 @@ onLaunch(() => {
   // ★ 实时推送的「全局订阅」只做一件事：更新底部导航的未读红点。
   //   报文里带 unread（服务端推送那一刻算的），所以正常情况下不额外发请求；
   //   页面各自的反应（刷新列表、弹提示）由页面自己订阅，避免全局管太宽。
+  //   ★ 「撤销下发」的报文带的是 unread_by_user（一次影响多个司机，
+  //     每人未读数不同），所以统一用 unreadFromPayload() 取，取不到再查一次。
   subscribeNotifications((payload) => {
     if (payload.type !== 'notification' && payload.type !== 'connected') return
-    if (typeof payload.unread === 'number') {
-      setUnread(payload.unread)
+    const unread = unreadFromPayload(payload)
+    if (unread !== null) {
+      setUnread(unread)
     } else {
       refreshUnread()
     }
@@ -167,6 +170,21 @@ page {
 .tag-danger {
   background: #fdecec;
   color: #d03050;
+}
+
+/*
+ * 趟次「三色状态」标签（司机端趟次卡片/详情用）。
+ * ★ 与卡片左侧色条同一套语义，别再各写颜色：
+ *   待确认 = 红（要司机动手）  已接单未完成 = 黄（在手上）  已完成 = 绿（收工）
+ */
+.tag-pending {
+  background: #fdecec;
+  color: #d03050;
+}
+
+.tag-accepted {
+  background: #fff7e0;
+  color: #b7791f;
 }
 
 /* 按钮 */

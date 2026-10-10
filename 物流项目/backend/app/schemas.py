@@ -650,6 +650,30 @@ class DispatchResult(BaseModel):
     message: str
 
 
+class UndoDispatchResult(BaseModel):
+    """撤销下发的执行结果（见 routers/scheduling.py 的 undo_dispatch）。
+
+    ★ 与 DispatchResult 对称：一个「发下去」，一个「收回来」。
+      刻意**不删**任务、方案与计划明细 —— 撤销的是下发事实，
+      不是调度成果，所以任务退回 confirmed 后可以重新选方案下发。
+    """
+
+    task_id: int
+    task_code: str
+    status: str
+    # 收回来的趟次数（被删掉的 dispatch_record 行数）
+    revoked_trips: int
+    # 顺带撤掉的司机站内消息数
+    revoked_notifications: int
+    # 被通知过的司机人数
+    drivers: int
+    # 已有现场执行记录的趟次数。>0 表示这些趟次没被收回（见接口文档）
+    executed_kept: int
+    # 已接单但尚未执行的趟次数：下发记录会被收回，现场执行记录保留
+    accepted_trips: int
+    message: str
+
+
 class ExceptionCreate(BaseModel):
     task_id: int
     event_type: str
@@ -748,6 +772,13 @@ class MobileTripOut(BaseModel):
     total_load: float = 0
     done_stores: int = 0
     arrived_stores: int = 0
+    # ★ 这辆车**当天一共要跑几趟**（同一天、同车、不同 trip_no 的个数）。
+    #   为什么要有这个字段：`trip_no` 是「本车当天第几趟」，**不是全局序号**。
+    #   一台车一天跑 4 趟时，司机会看到「第1趟…第4趟」；而一个司机名下可能有
+    #   好几台车（例：赵师傅 D001 名下有 5 台），于是列表里会出现**多个第1趟** ——
+    #   光看「第 1 趟」根本分不清是"这辆车的第1趟"还是"今天的第1趟"。
+    #   带上总趟数，前端就能写成「本车今天第 1 趟 / 共 2 趟」，一眼看懂。
+    vehicle_trip_count: int = 0
     # planned 未开始 / running 执行中 / done 已完成
     trip_status: str = "planned"
     # 司机确认接单：accepted 为真时 accepted_at 必有值（dispatch_record 上的首次确认时间）
@@ -915,12 +946,37 @@ class MobileTaskStatOut(BaseModel):
 
 
 class MobileTripStatOut(BaseModel):
-    """趟次统计：总数 + 已接单/未接单。"""
+    """趟次统计：**当日**已下发趟次 + 已接单/未接单（另有全表累计备查）。"""
 
     total: int = 0
     accepted: int = 0
     pending: int = 0
     dispatch_records: int = 0
+    # 全表累计下发记录数（只作展示，不参与当日任何比率计算）
+    all_time: int = 0
+
+
+class MobileCompletionStatOut(BaseModel):
+    """**执行完成情况**：看板上回答「今天跑完了多少」。
+
+    ★ 为什么和 MobileTripStatOut 分开：那个只统计「司机有没有点确认接单」
+      （接单是**响应**，不代表活干完了）。调度最关心的是进度，所以单独一组。
+      两者必须分别算：一个司机可以确认了但一趟没跑，也可以没确认却已经跑完。
+
+    口径（都能回溯到 `scheduling_plan_detail.status`）：
+      · finished  = 该趟**所有门店**都 done —— 这趟收工
+      · running   = 有门店 arrived/done，但还没全完 —— 正在跑
+      · not_started = 门店全是 dispatched（一个都没打卡）—— 还没出车
+      · stores_done / stores_total = 门店级完成度（趟次可能是「跑了 3 家还剩 1 家」，
+        只看趟次粒度会看不到这种中间状态）
+    """
+
+    trips_total: int = 0
+    finished: int = 0
+    running: int = 0
+    not_started: int = 0
+    stores_done: int = 0
+    stores_total: int = 0
 
 
 class MobileVehicleStatOut(BaseModel):
@@ -946,6 +1002,36 @@ class MobileExceptionBriefOut(BaseModel):
     summary: str = ""
 
 
+class MobileTripBriefOut(BaseModel):
+    """看板上的**趟次明细**（一行 = 一趟活，不是一家门店）。
+
+    ★ 为什么用趟次粒度：一天几十家门店，逐店列出来会把看板撑爆；
+      调度真正要盯的是「哪台车哪一趟跑到哪了」，所以一趟一行。
+      门店数用 `done_stores / store_count` 表示，跑了一半也看得出来。
+
+    state 取值（看板排序也按它：running → accepted → pending → done）：
+      running  有门店到店/完成，但没全完 —— **正在跑**
+      accepted 已接单，但一个门店都没打卡 —— 接了活还没出车
+      pending  没接单、没打卡 —— 还没确认
+      done     该趟所有门店都完成 —— 收工
+    """
+
+    trip_key: str
+    task_id: int = 0
+    task_code: str = ""
+    plan_id: int = 0
+    trip_no: int = 1
+    time_window: str = "AM"
+    vehicle_id: int = 0
+    plate_no: str = ""
+    driver_name: str = ""
+    store_count: int = 0
+    done_stores: int = 0
+    arrived_stores: int = 0
+    accepted: bool = False
+    state: str = "pending"
+
+
 class MobileManagerOverviewOut(BaseModel):
     """管理端只读首页聚合数据。"""
 
@@ -953,6 +1039,9 @@ class MobileManagerOverviewOut(BaseModel):
     generated_at: datetime
     tasks: MobileTaskStatOut
     trips: MobileTripStatOut
+    completion: MobileCompletionStatOut
+    # 趟次明细：看板最上面那块（一行一趟）
+    trip_briefs: list[MobileTripBriefOut] = []
     vehicles: MobileVehicleStatOut
     exceptions: MobileExceptionStatOut
     recent_exceptions: list[MobileExceptionBriefOut] = []

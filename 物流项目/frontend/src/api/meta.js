@@ -83,6 +83,8 @@ export const ACTION_META = {
   'scheduling.confirm': { text: '人工确认方案', type: 'warning' },
   'scheduling.replan': { text: '异常重排', type: 'danger' },
   'scheduling.dispatch': { text: '下发方案', type: 'success' },
+  // 撤销下发：把发下去的趟次收回，任务退回「已确认」（见 SchedTasksView 的按钮）
+  'scheduling.undo_dispatch': { text: '撤销下发', type: 'danger' },
 }
 
 export function actionMeta(action) {

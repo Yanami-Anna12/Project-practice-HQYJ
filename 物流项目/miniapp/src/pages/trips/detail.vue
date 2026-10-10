@@ -33,6 +33,7 @@ import {
   stopStatusClass,
   stopStatusLabel,
   timeWindowLabel,
+  tripState,
   tripStatusClass,
   tripStatusText,
 } from '@/utils/format'
@@ -242,22 +243,24 @@ onLoad((options) => {
     </view>
 
     <template v-else-if="detail">
-      <!-- 确认接单带（未确认醒目 / 已确认绿色） -->
-      <view class="accept-bar" :class="detail.accepted ? 'accept-bar-ok' : 'accept-bar-pending'">
+      <!-- 确认接单带：三色与列表卡片一致（红=未确认 / 黄=已接单未完成 / 绿=已完成） -->
+      <view class="accept-bar" :class="`accept-bar-${tripState(detail)}`">
         <view class="accept-text">
           <view class="accept-status">
             {{ acceptStatusText(detail) }}
           </view>
           <view class="accept-hint">
             {{
-              detail.accepted
-                ? '调度中心已知悉你收到该趟任务'
-                : '请先确认收到任务，再按门店顺序执行'
+              tripState(detail) === 'done'
+                ? '本趟已跑完，记录保留在这里可随时回看'
+                : detail.accepted
+                  ? '调度中心已知悉你收到该趟任务'
+                  : '请先确认收到任务，再按门店顺序执行'
             }}
           </view>
         </view>
         <button
-          v-if="!detail.accepted"
+          v-if="tripState(detail) === 'pending'"
           class="btn btn-primary accept-btn"
           :disabled="accepting"
           @click="confirmAccept"
@@ -280,11 +283,17 @@ onLoad((options) => {
           <text class="row-value">{{ detail.task_code }} / {{ detail.plan_code || '—' }}</text>
         </view>
         <view class="row">
-          <text class="row-label">日期 / 时段</text>
+          <text class="row-label">出车顺序</text>
           <text class="row-value">
-            {{ formatDate(detail.schedule_date) }} ·
-            {{ timeWindowLabel(detail.time_window) }} · 第 {{ detail.trip_no }} 趟
+            本车今天第 {{ detail.trip_no }} 趟<text
+              v-if="detail.vehicle_trip_count > 1"
+            >（共 {{ detail.vehicle_trip_count }} 趟）</text>
+            · {{ timeWindowLabel(detail.time_window) }}送
           </text>
+        </view>
+        <view class="row">
+          <text class="row-label">日期</text>
+          <text class="row-value">{{ formatDate(detail.schedule_date) }}</text>
         </view>
         <view class="row">
           <text class="row-label">车型</text>
@@ -430,12 +439,18 @@ onLoad((options) => {
   margin-bottom: 20rpx;
 }
 
+/* 三色确认带：红=未确认 / 黄=已接单未完成 / 绿=已完成（与列表卡片同一口径） */
 .accept-bar-pending {
-  background: #fff4e6;
-  border-left: 8rpx solid #d97706;
+  background: #fdecec;
+  border-left: 8rpx solid #d03050;
 }
 
-.accept-bar-ok {
+.accept-bar-accepted {
+  background: #fff7e0;
+  border-left: 8rpx solid #d9a406;
+}
+
+.accept-bar-done {
   background: #e8f7ee;
   border-left: 8rpx solid #18a058;
 }
@@ -446,10 +461,14 @@ onLoad((options) => {
 }
 
 .accept-bar-pending .accept-status {
-  color: #b45309;
+  color: #c0392b;
 }
 
-.accept-bar-ok .accept-status {
+.accept-bar-accepted .accept-status {
+  color: #b7791f;
+}
+
+.accept-bar-done .accept-status {
   color: #18a058;
 }
 

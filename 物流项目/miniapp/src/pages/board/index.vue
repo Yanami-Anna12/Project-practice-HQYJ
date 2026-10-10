@@ -20,11 +20,14 @@ import { onPullDownRefresh, onShow } from '@dcloudio/uni-app'
 import * as api from '@/api'
 import BottomNav from '@/components/BottomNav.vue'
 import {
+  briefStateClass,
+  briefStateLabel,
   exceptionStatusText,
   exceptionTypeLabel,
   formatDate,
   formatFullDateTime,
   taskStatusText,
+  timeWindowLabel,
 } from '@/utils/format'
 import { requireLogin } from '@/utils/ui'
 
@@ -49,6 +52,53 @@ const acceptRate = computed(() => {
   if (!trips.total) return 0
   return Math.round(((trips.accepted || 0) / trips.total) * 100)
 })
+
+/** 门店完成度百分比（按门店算，比趟次粒度更能看出「跑了一半」） */
+const doneRate = computed(() => {
+  const c = (overview.value && overview.value.completion) || {}
+  if (!c.stores_total) return 0
+  return Math.round(((c.stores_done || 0) / c.stores_total) * 100)
+})
+
+/* ---------------- 趟次明细（看板最上面那块） ---------------- */
+/** 每档（正在跑/已接单/待确认/已完成）首屏各给几条 */
+const PER_STATE_LIMIT = 3
+const showAllBriefs = ref(false)
+
+const briefs = computed(() => (overview.value && overview.value.trip_briefs) || [])
+
+/**
+ * 各类各有多少（不依赖后端另给字段，直接按 state 数一遍）。
+ * 顺序固定为「要盯的在前」，与明细排序一致。
+ */
+const briefSummary = computed(() => {
+  const order = ['running', 'accepted', 'pending', 'done']
+  return order
+    .map((state) => ({
+      state,
+      label: briefStateLabel(state),
+      count: briefs.value.filter((t) => t.state === state).length,
+    }))
+    .filter((s) => s.count > 0)
+})
+
+/** 首屏每档取前 N 条；展开后给全部（后端已按状态排好，这里只需按档截断） */
+const visibleBriefs = computed(() => {
+  if (showAllBriefs.value) return briefs.value
+  const seen = {}
+  const out = []
+  for (const t of briefs.value) {
+    const n = seen[t.state] || 0
+    if (n >= PER_STATE_LIMIT) continue
+    seen[t.state] = n + 1
+    out.push(t)
+  }
+  return out
+})
+
+function toggleBriefs() {
+  showAllBriefs.value = !showAllBriefs.value
+}
 
 async function load() {
   if (!requireLogin()) return
@@ -107,6 +157,61 @@ onPullDownRefresh(async () => {
     </view>
 
     <template v-else-if="overview">
+      <!--
+        ★ 趟次明细放在最上面（用户要求：「一进来就能看到」）：
+          一行 = 一趟活（不是一家门店 —— 逐店列会把看板撑爆）。
+          排序由后端给：正在跑 → 已接单 → 待确认 → 已完成，
+          即「要盯的在最上面、跑完的沉底」，与司机端三色语义一致。
+      -->
+      <view class="card">
+        <view class="card-title">
+          <text>趟次明细（{{ briefs.length }} 趟）</text>
+          <text class="muted small">按 正在跑 → 已接单 → 待确认 → 已完成 排</text>
+        </view>
+
+        <view v-if="!briefs.length" class="muted">今天还没有已下发的趟次</view>
+
+        <!-- 分布小结：不用往下翻就知道各类各有多少 -->
+        <view v-if="briefs.length" class="brief-summary">
+          <text
+            v-for="s in briefSummary"
+            :key="s.state"
+            class="tag"
+            :class="briefStateClass(s.state)"
+          >
+            {{ briefStateLabel(s.state) }} {{ s.count }}
+          </text>
+        </view>
+
+        <!--
+          ★ 首屏每档只给 3 条：49 趟全铺开有 4800px 高，
+            「今日任务 / 完成情况」这些数字要滑半天才看得到，反而失去「一进来就看到」的意义。
+            每档给前几条 + 分布数字，点「展开」再看全部。
+        -->
+        <view
+          v-for="t in visibleBriefs"
+          :key="t.trip_key"
+          class="brief-row"
+          :class="`brief-${t.state}`"
+        >
+          <view class="brief-main">
+            <text class="brief-plate">{{ t.plate_no || '未知车牌' }}</text>
+            <text class="brief-trip">第 {{ t.trip_no }} 趟·{{ timeWindowLabel(t.time_window) }}</text>
+            <text class="tag" :class="briefStateClass(t.state)">{{ briefStateLabel(t.state) }}</text>
+          </view>
+          <view class="brief-sub">
+            <text>{{ t.driver_name || '未指派' }}</text>
+            <text>门店 {{ t.done_stores }}/{{ t.store_count }}</text>
+            <text class="muted">{{ t.task_code }}</text>
+          </view>
+        </view>
+
+        <view v-if="briefs.length > visibleBriefs.length || showAllBriefs" class="brief-more" @click="toggleBriefs">
+          <text v-if="!showAllBriefs">展开全部 {{ briefs.length }} 趟 ›</text>
+          <text v-else>收起，每档只看前 {{ PER_STATE_LIMIT }} 趟 ‹</text>
+        </view>
+      </view>
+
       <!-- 页头：日期 + 快照时间 -->
       <view class="card head-card">
         <view class="head-title">今日看板（只读）</view>
@@ -145,11 +250,52 @@ onPullDownRefresh(async () => {
             {{ overview.trips.pending }} 趟
           </text>
         </view>
+        <view class="desc">以上均为当日数值（累计下发 {{ overview.trips.all_time }} 趟）</view>
         <view class="accept-progress">
           <view class="accept-progress-bar">
             <view class="accept-progress-inner" :style="{ width: acceptRate + '%' }" />
           </view>
           <text class="progress-text">接单率 {{ acceptRate }}%（{{ overview.trips.accepted }}/{{ overview.trips.total }}）</text>
+        </view>
+      </view>
+
+      <!-- 执行完成情况：调度最关心的「今天跑完了多少」 -->
+      <view v-if="overview.completion" class="card">
+        <view class="card-title">
+          <text>执行完成情况</text>
+          <text class="big-num">{{ overview.completion.trips_total }}</text>
+        </view>
+        <view class="row">
+          <text class="row-label">已完成</text>
+          <text class="row-value ok-text">{{ overview.completion.finished }} 趟</text>
+        </view>
+        <view class="row">
+          <text class="row-label">正在跑</text>
+          <text class="row-value" :class="overview.completion.running ? 'info-text' : ''">
+            {{ overview.completion.running }} 趟
+          </text>
+        </view>
+        <view class="row">
+          <text class="row-label">未出车</text>
+          <text class="row-value" :class="overview.completion.not_started ? 'warn-text' : ''">
+            {{ overview.completion.not_started }} 趟
+          </text>
+        </view>
+        <view class="accept-progress">
+          <view class="accept-progress-bar">
+            <view
+              class="accept-progress-inner done-inner"
+              :style="{ width: doneRate + '%' }"
+            />
+          </view>
+          <text class="progress-text">
+            门店完成度 {{ doneRate }}%（{{ overview.completion.stores_done }}/{{
+              overview.completion.stores_total
+            }} 家）
+          </text>
+        </view>
+        <view class="desc">
+          口径：「已完成」= 该趟所有门店都打完卡；「正在跑」= 有门店到了店但没跑完。
         </view>
       </view>
 
@@ -244,6 +390,82 @@ onPullDownRefresh(async () => {
   color: #d97706;
 }
 
+.info-text {
+  color: #1668dc;
+}
+
+/* ---------------- 趟次明细（看板最上面那块） ---------------- */
+/* 一行 = 一趟活；左侧色条与司机端三色同源，扫一眼就知道哪几趟要盯 */
+.brief-row {
+  padding: 14rpx 16rpx;
+  border-left: 8rpx solid #8a9099;
+  background: #fafbfc;
+  border-radius: 8rpx;
+  margin-bottom: 10rpx;
+}
+
+.brief-running {
+  border-left-color: #1668dc;
+}
+
+.brief-accepted {
+  border-left-color: #d9a406;
+}
+
+.brief-pending {
+  border-left-color: #d03050;
+}
+
+.brief-done {
+  border-left-color: #18a058;
+}
+
+.brief-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.brief-plate {
+  font-weight: 700;
+  font-size: 28rpx;
+  margin-right: 12rpx;
+}
+
+.brief-trip {
+  color: #4b5563;
+  font-size: 24rpx;
+  margin-right: 12rpx;
+}
+
+.brief-sub {
+  display: flex;
+  gap: 18rpx;
+  flex-wrap: wrap;
+  color: #8a9099;
+  font-size: 22rpx;
+  margin-top: 6rpx;
+}
+
+.brief-more {
+  text-align: center;
+  color: #1668dc;
+  font-size: 24rpx;
+  padding: 12rpx 0 4rpx;
+}
+
+/* 分布小结：一行标签，不用往下翻就知道各类各有多少 */
+.brief-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-bottom: 14rpx;
+}
+
+.small {
+  font-size: 22rpx;
+}
+
 .accept-progress {
   margin-top: 16rpx;
 }
@@ -257,6 +479,11 @@ onPullDownRefresh(async () => {
 
 .accept-progress-inner {
   height: 100%;
+  background: #18a058;
+}
+
+/* 门店完成度用绿色（与「已完成」同一套语义），接单率保持绿色不动 */
+.done-inner {
   background: #18a058;
 }
 

@@ -141,6 +141,31 @@ export function setUnread(count) {
   unreadCount.value = safe > 0 ? safe : 0
 }
 
+/**
+ * 从实时推送报文里取出「发给当前账号的未读数」。
+ *
+ * 后端一般直接带 `unread`；但**撤回下发**这类「一次影响多个司机」的报文
+ * 带的是 `unread_by_user`（user_id → 未读数），因为每个司机的消息条数不同，
+ * 一个数字说不清。这里统一取一次，页面不用各自判断。
+ *
+ * @returns {number|null} null 表示报文里没有未读数，调用方应自己去查一次
+ */
+export function unreadFromPayload(payload) {
+  if (!payload || typeof payload !== 'object') return null
+  if (typeof payload.unread === 'number') return payload.unread
+
+  const byUser = payload.unread_by_user
+  if (byUser && typeof byUser === 'object') {
+    const me = getStoredUser()
+    const userId = me && (me.id ?? me.user_id)
+    if (userId !== undefined && userId !== null) {
+      const mine = byUser[userId] ?? byUser[String(userId)]
+      if (typeof mine === 'number') return mine
+    }
+  }
+  return null
+}
+
 /* ------------------------------------------------------------------ *
  * 登录校验
  * ------------------------------------------------------------------ */

@@ -10,8 +10,15 @@
  *   重复点「下发」不会产生重复任务，页面会显示「跳过 N 个」。
  */
 import { computed, onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Refresh, Select, CloseBold, Promotion, View } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Refresh,
+  Select,
+  CloseBold,
+  Promotion,
+  View,
+  RefreshLeft,
+} from '@element-plus/icons-vue'
 import * as api from '@/api'
 import { withError, tryAction } from '@/utils/error'
 import { taskStatus } from '@/utils/enums'
@@ -126,6 +133,43 @@ async function dispatch(plan) {
   await loadTasks()
 }
 
+/* ---------------- 撤销下发 ---------------- */
+/**
+ * 撤销下发：下错方案时把这一版安排收回来，任务退回「已确认」。
+ *
+ * ★ 后端只清「下发这个动作」的数据（dispatch_record + 司机站内消息 +
+ *   明细状态），任务与方案全部保留，所以撤销之后**本页的「下发」按钮会重新出现**，
+ *   直接换一个方案再发即可 —— 不必重跑调度。
+ */
+const undoing = ref(false)
+
+async function undoDispatch() {
+  if (!canConfirm.value || !detail.value) return
+  const task = detail.value.task
+  try {
+    await ElMessageBox.confirm(
+      `确定撤销任务「${task.code}」的下发？\n\n` +
+        '· 发给司机的趟次与站内消息会被收回，任务退回「已确认」，可重新选择方案下发；\n' +
+        '· 任务、方案与计划明细全部保留，司机已打卡执行的趟次不受影响。',
+      '撤销下发',
+      { type: 'warning', confirmButtonText: '撤销下发', cancelButtonText: '取消' },
+    )
+  } catch {
+    return
+  }
+
+  undoing.value = true
+  // 刻意不用 tryAction 的成功提示：撤销的说明信息（收回几个趟次、
+  // 保留几个已执行趟次）由后端拼好，前端原样展示更准确。
+  const { ok, result } = await tryAction(() => api.undoDispatch(task.id), null)
+  undoing.value = false
+  if (!ok) return
+
+  ElMessage.success(result.message)
+  await loadTasks()
+  await openTask(task.id)
+}
+
 /* ---------------- 方案明细 ---------------- */
 const detailsVisible = ref(false)
 const detailsLoading = ref(false)
@@ -219,6 +263,17 @@ onMounted(loadTasks)
               <span v-if="detail" class="muted">
                 规则版本 {{ detail.task.rule_version }}
               </span>
+              <el-button
+                v-if="detail && canConfirm && ['dispatched', 'completed'].includes(detail.task.status)"
+                type="danger"
+                plain
+                size="small"
+                :icon="RefreshLeft"
+                :loading="undoing"
+                @click="undoDispatch"
+              >
+                撤销下发
+              </el-button>
             </div>
           </template>
 

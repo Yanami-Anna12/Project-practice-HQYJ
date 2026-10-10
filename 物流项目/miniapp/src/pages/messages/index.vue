@@ -23,7 +23,7 @@ import * as api from '@/api'
 import BottomNav from '@/components/BottomNav.vue'
 import { subscribeNotifications } from '@/utils/socket'
 import { formatDateTime } from '@/utils/format'
-import { accountProfile, requireLogin, setUnread } from '@/utils/ui'
+import { accountProfile, requireLogin, setUnread, unreadFromPayload } from '@/utils/ui'
 
 const messages = ref([])
 const loading = ref(false)
@@ -145,15 +145,24 @@ onLoad(() => {
   //   · 正在看这一页 → 静默重拉列表，司机当场看到新消息；
   //   · 没在看（在别的 tab / 页面）→ 只同步未读数，
   //     列表等 onShow 时再拉，避免给看不见的页面做无用功。
+  // ★ 管理员撤销下发时后端会删掉对应的下发消息，并推一条
+  //   biz_type=revoked 的报文（未读数走 unread_by_user）：这时**必须重拉**，
+  //   否则那几条已经被删掉的消息还挂在列表上，点开是空的。
   unsubscribe = subscribeNotifications((payload) => {
     if (payload.type !== 'notification') return
+    const bizType = payload.notification && payload.notification.biz_type
+    const unreadNow = unreadFromPayload(payload)
+    if (unreadNow !== null) {
+      unread.value = unreadNow
+      setUnread(unreadNow)
+    }
     if (visible.value) {
       load(true)
       return
     }
-    if (typeof payload.unread === 'number') {
-      unread.value = payload.unread
-      setUnread(unread.value)
+    if (bizType === 'revoked' && unreadNow === null) {
+      // 报文没带未读数（老后端）时兜底查一次
+      refreshUnread()
     }
   })
 })

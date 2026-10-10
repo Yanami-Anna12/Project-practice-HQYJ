@@ -324,6 +324,16 @@ export async function dispatchPlan(taskId, planId) {
   })
 }
 
+/**
+ * 撤销下发：把发下去的趟次收回，任务退回「已确认」，可重新选方案下发。
+ *
+ * ★ 只清「下发这个动作」产生的数据（dispatch_record + 司机通知 + 明细状态），
+ *   任务 / 方案 / 计划明细都保留；已打卡执行的趟次不会被收回。
+ */
+export async function undoDispatch(taskId) {
+  return request.post(`/api/scheduling/tasks/${taskId}/undo-dispatch`)
+}
+
 export async function fetchExceptions(taskId) {
   return request.get('/api/scheduling/exceptions', {
     params: taskId ? { task_id: taskId } : {},
@@ -347,6 +357,20 @@ export async function fetchTaskReport(taskId) {
 /* ------------------------------------------------------------------ *
  * 报表与看板
  * ------------------------------------------------------------------ */
+
+/**
+ * 今日看板聚合数据（与小程序「今日看板」同一个接口、同一份口径）。
+ *
+ * ★ 为什么网页端也用它：`/api/mobile/*` 看着像司机端专用，但这个聚合接口的准入
+ *   是 `scheduling:read`（admin / dispatcher / viewer 都能用，司机 403），
+ *   本来就是给管理端看的；再开一个 `/api/dashboard` 只会让两端口径有机会跑偏。
+ *   返回：任务数、趟次数（当日）、执行完成情况、**趟次明细 trip_briefs**、在途车辆、异常。
+ */
+export async function fetchManagerOverview(scheduleDate) {
+  return request.get('/api/mobile/manager/overview', {
+    params: scheduleDate ? { schedule_date: scheduleDate } : {},
+  })
+}
 
 export async function fetchReportDates() {
   return request.get('/api/reports/dates')

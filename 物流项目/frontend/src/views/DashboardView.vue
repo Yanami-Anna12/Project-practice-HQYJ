@@ -2,17 +2,98 @@
 /**
  * 调度看板（登录后的落地页）。
  *
- * ★ 本页首版只做「能看出系统形态」的程度：
- *   车辆规模与趟次规则直接取自《需求文档》一.三「现有条件」，
- *   其余业务指标标注为「待接入」，不编造数值 —— 假数据比空着更容易误导。
+ * ★ 首版这里只有《需求文档》里的静态条件与「待接入」占位；
+ *   现在**顶部接入了真实数据**：今日趟次明细 + 执行完成情况 + 任务/趟次/在途/异常。
+ *   底下那几块（车型规模、核心约束、规划看板）保持原样 —— 它们本来就是文档口径的说明，
+ *   不是实时指标，改了反而误导。
+ *
+ * ★ 数据来源：`/api/mobile/manager/overview`（与小程序「今日看板」同一个接口）。
+ *   路径带 `mobile` 只是因为历史原因，它的准入是 `scheduling:read`，
+ *   admin / dispatcher / viewer 都能看，司机 403。
  */
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Van, Box, TakeawayBox, MagicStick, Refresh } from '@element-plus/icons-vue'
+import * as api from '@/api'
+import { withError } from '@/utils/error'
 import { useAuthStore } from '@/stores/auth'
-import { Van, Box, TakeawayBox, MagicStick } from '@element-plus/icons-vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+
+/* ---------------- 实时看板数据 ---------------- */
+const overview = ref(null)
+const loading = ref(false)
+/** 看板日期：默认今天，可回看历史（演示数据是 10-10 那几天的） */
+const boardDate = ref(toISO(new Date()))
+
+function toISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+async function loadOverview() {
+  loading.value = true
+  try {
+    overview.value = await withError(() => api.fetchManagerOverview(boardDate.value))
+    if (!overview.value) ElMessage.warning('看板数据加载失败，请检查后端是否在运行')
+  } finally {
+    loading.value = false
+  }
+}
+
+/** 看板上的任务状态 → 中文（后端给的是 status 英文码） */
+const TASK_STATUS_TEXT = {
+  created: '待调度',
+  running: '求解中',
+  pending_confirm: '待确认',
+  confirmed: '已确认',
+  dispatched: '已下发',
+  completed: '已完成',
+  failed: '求解失败',
+}
+
+const taskStatusRows = computed(() => {
+  const by = (overview.value && overview.value.tasks && overview.value.tasks.by_status) || {}
+  return Object.keys(by)
+    .map((k) => ({ key: k, label: TASK_STATUS_TEXT[k] || k, count: by[k] }))
+    .filter((r) => r.count > 0)
+    .sort((a, b) => b.count - a.count)
+})
+
+/** 趟次明细：四态文案与颜色（与小程序看板、司机端三色同一套语义） */
+const BRIEF_STATE = {
+  running: { text: '正在跑', type: 'primary' },
+  accepted: { text: '已接单', type: 'warning' },
+  pending: { text: '待确认', type: 'danger' },
+  done: { text: '已完成', type: 'success' },
+}
+const briefState = (s) => BRIEF_STATE[s] || { text: s, type: 'info' }
+
+const briefs = computed(() => (overview.value && overview.value.trip_briefs) || [])
+
+/** 分布小结：各档各多少（顺序与后端排序一致：要盯的在前） */
+const briefSummary = computed(() =>
+  ['running', 'accepted', 'pending', 'done']
+    .map((state) => ({ state, ...briefState(state), count: briefs.value.filter((t) => t.state === state).length }))
+    .filter((s) => s.count > 0),
+)
+
+const completion = computed(() => (overview.value && overview.value.completion) || {})
+const doneRate = computed(() =>
+  completion.value.stores_total
+    ? Math.round((completion.value.stores_done / completion.value.stores_total) * 100)
+    : 0,
+)
+
+/** 深色/浅色标签：明细行「进度」列用 */
+function briefProgress(row) {
+  if (row.store_count && row.done_stores >= row.store_count) return { text: '已完成', type: 'success' }
+  if (row.done_stores || row.arrived_stores) return { text: `进行中 ${row.done_stores}/${row.store_count}`, type: 'warning' }
+  return { text: `未开始 0/${row.store_count}`, type: 'info' }
+}
+
+onMounted(loadOverview)
 
 /** 现有条件（来源：需求文档 一.3） */
 const fleet = [
@@ -85,7 +166,154 @@ const quickLinks = [
           <el-tag v-for="n in auth.roleNames" :key="n" size="small" effect="plain" class="mr">{{ n }}</el-tag>
         </p>
       </div>
+      <div class="head-actions">
+        <el-date-picker
+          v-model="boardDate"
+          type="date"
+          value-format="YYYY-MM-DD"
+          :clearable="false"
+          style="width: 150px"
+          @change="loadOverview"
+        />
+        <el-button :icon="Refresh" :loading="loading" @click="loadOverview">刷新</el-button>
+      </div>
     </div>
+
+    <!--
+      ★ 趟次明细放最上面（用户要求「一进来就能看到」）：
+        一行 = 一趟活（不是一家门店 —— 逐店列会把表格撑到几十行）。
+        排序由后端给：正在跑 → 已接单 → 待确认 → 已完成，要盯的在最上面。
+    -->
+    <el-card shadow="never" class="mb" v-loading="loading">
+      <template #header>
+        <div class="card-head">
+          <span class="card-title">今日趟次明细（{{ briefs.length }} 趟）</span>
+          <span class="muted">
+            {{ overview?.schedule_date || boardDate }} ·
+            按 正在跑 → 已接单 → 待确认 → 已完成 排
+          </span>
+        </div>
+      </template>
+
+      <div v-if="briefSummary.length" class="brief-summary">
+        <el-tag
+          v-for="s in briefSummary"
+          :key="s.state"
+          :type="s.type"
+          size="small"
+          effect="plain"
+          class="mr"
+        >
+          {{ s.text }} {{ s.count }}
+        </el-tag>
+      </div>
+
+      <el-table :data="briefs" stripe size="small" max-height="420" empty-text="该日期没有已下发的趟次">
+        <el-table-column label="车牌" width="110">
+          <template #default="{ row }">
+            <span class="perm-code">{{ row.plate_no || '—' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="趟次" width="120">
+          <template #default="{ row }">
+            第 {{ row.trip_no }} 趟
+            <el-tag size="small" effect="plain" class="ml-sm">{{ row.time_window }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="driver_name" label="司机" width="100">
+          <template #default="{ row }">{{ row.driver_name || '未指派' }}</template>
+        </el-table-column>
+        <el-table-column label="门店进度" width="130">
+          <template #default="{ row }">
+            <el-tag :type="briefProgress(row).type" size="small" effect="plain">
+              {{ briefProgress(row).text }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="briefState(row.state).type" size="small">
+              {{ briefState(row.state).text }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="接单" width="80" align="center">
+          <template #default="{ row }">
+            <span v-if="row.accepted" class="ok-text">已接单</span>
+            <span v-else class="muted">未接单</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="任务" min-width="150">
+          <template #default="{ row }">
+            <el-link type="primary" :underline="false" @click="router.push('/scheduling/tasks')">
+              {{ row.task_code }}
+            </el-link>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <!-- 执行完成情况 / 任务 / 趟次接单 / 在途 / 异常：真实数字 -->
+    <el-row :gutter="16" class="mb">
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="never" class="sum-card">
+          <div class="sum-label">今日任务</div>
+          <div class="sum-value">{{ overview?.tasks?.total ?? '—' }}<span class="unit">个</span></div>
+          <div class="sum-note">
+            <template v-if="taskStatusRows.length">
+              {{ taskStatusRows.map((r) => `${r.label} ${r.count}`).join(' · ') }}
+            </template>
+            <template v-else>该日期没有任务</template>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="never" class="sum-card">
+          <div class="sum-label">已下发趟次</div>
+          <div class="sum-value">{{ overview?.trips?.total ?? '—' }}<span class="unit">趟</span></div>
+          <div class="sum-note">
+            已接单 {{ overview?.trips?.accepted ?? 0 }} · 未接单 {{ overview?.trips?.pending ?? 0 }}
+            （累计 {{ overview?.trips?.all_time ?? 0 }}）
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="never" class="sum-card">
+          <div class="sum-label">执行完成情况</div>
+          <div class="sum-value">
+            {{ completion.trips_total || 0 }}<span class="unit">趟</span>
+          </div>
+          <div class="sum-note">
+            已完成 {{ completion.finished || 0 }} · 正在跑 {{ completion.running || 0 }} ·
+            未出车 {{ completion.not_started || 0 }}
+          </div>
+          <el-progress
+            :percentage="doneRate"
+            :stroke-width="10"
+            :color="doneRate === 100 ? '#67c23a' : '#409eff'"
+            class="mt-sm"
+          />
+          <div class="sum-note">
+            门店完成度 {{ completion.stores_done || 0 }}/{{ completion.stores_total || 0 }} 家
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="never" class="sum-card">
+          <div class="sum-label">在途车辆 / 异常</div>
+          <div class="sum-value">
+            {{ overview?.vehicles?.in_transit ?? '—' }}<span class="unit">台在途</span>
+          </div>
+          <div class="sum-note">
+            共 {{ overview?.vehicles?.total ?? 0 }} 台 ·
+            <span :class="overview?.exceptions?.pending ? 'warn-text' : ''">
+              待处理异常 {{ overview?.exceptions?.pending ?? 0 }}
+            </span>
+            条
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
     <!-- 车辆规模 -->
     <el-row :gutter="16">
@@ -108,7 +336,7 @@ const quickLinks = [
       </el-col>
     </el-row>
 
-    <!-- 汇总 -->
+    <!-- 汇总（车型规模来自需求文档，不是实时数据） -->
     <el-row :gutter="16" class="mt">
       <el-col :xs="24" :sm="8">
         <el-card shadow="never" class="sum-card">
@@ -126,9 +354,14 @@ const quickLinks = [
       </el-col>
       <el-col :xs="24" :sm="8">
         <el-card shadow="never" class="sum-card">
-          <div class="sum-label">今日调度任务</div>
-          <div class="sum-value pending">待接入</div>
-          <div class="sum-note">需接入后端与求解器后展示</div>
+          <div class="sum-label">今日已下发趟次</div>
+          <div class="sum-value">
+            {{ overview?.trips?.total ?? '—' }}<span class="unit">趟</span>
+          </div>
+          <div class="sum-note">
+            相对理论上限的 {{ maxTrips ? Math.round(((overview?.trips?.total || 0) / maxTrips) * 100) : 0 }}%
+            —— 不保障每天满勤，按当日货量动态调节
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -223,6 +456,55 @@ const quickLinks = [
 </template>
 
 <style scoped>
+/* 页头右侧：日期 + 刷新（看板可以回看历史日期） */
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: #909399;
+  font-size: 12px;
+}
+
+.ok-text {
+  color: #67c23a;
+}
+
+.warn-text {
+  color: #e6a23c;
+}
+
+.mb {
+  margin-bottom: 16px;
+}
+
+.mr {
+  margin-right: 6px;
+}
+
+.ml-sm {
+  margin-left: 4px;
+}
+
+.mt-sm {
+  margin-top: 8px;
+}
+
+/* 趟次明细顶部的分布小结 */
+.brief-summary {
+  margin-bottom: 10px;
+}
+
 .stat-card {
   margin-bottom: 16px;
 }

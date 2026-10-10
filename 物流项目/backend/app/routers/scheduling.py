@@ -15,18 +15,19 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy import func
 
 from app.config import settings
 from app.deps import DbSession, require_permission
-from app.errors import AppError, ConflictError, NotFoundError
+from app.errors import ConflictError, NotFoundError
 from app.models import (
     DispatchRecord,
     ExceptionEvent,
+    MobileNotification,
     ReplanRecord,
     SchedulingConfirmation,
     SchedulingPlan,
@@ -36,6 +37,8 @@ from app.models import (
     Store,
     SysParam,
     SysUser,
+    TripStopRecord,
+    Vehicle,
 )
 from app.schemas import (
     ConfirmRequest,
@@ -51,8 +54,10 @@ from app.schemas import (
     SchedulingRunRequest,
     TaskDetailOut,
     TaskOut,
+    UndoDispatchResult,
 )
 from app.services import mobile as mobile_service
+from app.services import realtime
 from app.services import scheduling as sched
 from app.services.audit import append_audit
 from app.services.solver import check_assignable
@@ -372,6 +377,247 @@ def dispatch_task(
         plan_id=plan_id,
         dispatched_trips=dispatched,
         skipped_duplicated=skipped,
+        message=message,
+    )
+
+
+@router.post(
+    "/tasks/{task_id}/undo-dispatch",
+    response_model=UndoDispatchResult,
+    summary="撤销下发（收回下发给司机的任务）",
+)
+def undo_dispatch(
+    task_id: int, db: DbSession, actor: Confirmer, background: BackgroundTasks
+) -> UndoDispatchResult:
+    """把一次下发**收回来**，任务退回「已确认」，可重新选方案下发。
+
+    ★ 为什么是「撤销下发」而不是「删除任务」：
+
+      下错方案的正确处置是**撤回这一版安排**，而不是抹掉调度成果。
+      所以这里只清「下发这个动作产生的数据」，任务 / 方案 / 计划明细
+      **一律保留** —— 它们仍然是可追溯的调度结果，撤销后随时能重发。
+
+    ★ 撤销清单（全部在一个事务里，失败整体回滚）：
+
+      1. `dispatch_record`：该任务的下发记录（司机端趟次的来源，
+         也是司机「确认接单」事实的载体）
+      2. `mobile_notification`：发给司机的下发站内消息（biz_type=dispatch
+         且 biz_id=本任务）。biz_id 是任务号，所以只撤本任务的通知，
+         不会误伤别的任务下发的消息。
+      3. `scheduling_plan_detail.status`：该任务所有明细从 dispatched 退回
+         planned（未执行的趟次），让这些趟次从「我的趟次」里消失。
+
+    ★ 什么**不会**被撤销 —— 现场执行是既成事实，收回不了：
+
+      · `trip_stop_record`（司机到店/离店打卡）与状态已推进到
+        arrived/done 的明细**原样保留**；
+      · 已接单（accepted_at）但还没执行的趟次，下发记录会被收回，
+        但司机端留下的接单记录不删 —— 与上面同理，发生过的事不抹除。
+
+    ★ 幂等：对没下发过的任务调用不报错，返回 revoked_trips=0。
+    """
+    task = db.get(SchedulingTask, task_id)
+    if task is None:
+        raise NotFoundError("调度任务不存在")
+
+    if task.status not in ("dispatched", "completed"):
+        return UndoDispatchResult(
+            task_id=task.id,
+            task_code=task.code,
+            status=task.status,
+            revoked_trips=0,
+            revoked_notifications=0,
+            drivers=0,
+            executed_kept=0,
+            accepted_trips=0,
+            message=f"任务 {task.code} 当前状态为 {task.status}，没有已下发的趟次需要撤销",
+        )
+
+    plan_ids = [
+        row[0]
+        for row in db.query(SchedulingPlan.id)
+        .filter(SchedulingPlan.task_id == task.id)
+        .all()
+    ]
+
+    # 已经动过的趟次：状态已推进（arrived/done）或已有现场打卡记录。
+    # 这些趟次从「待收回」里排除 —— 收回一个司机正在跑的趟次，
+    # 只会让他在路上失去任务。
+    executed: set[tuple[int, int]] = {
+        (vehicle_id, trip_no)
+        for vehicle_id, trip_no in db.query(
+            SchedulingPlanDetail.vehicle_id, SchedulingPlanDetail.trip_no
+        )
+        .filter(
+            SchedulingPlanDetail.plan_id.in_(plan_ids),
+            SchedulingPlanDetail.status.notin_(["planned", "dispatched"]),
+        )
+        .all()
+    }
+    if plan_ids:
+        executed |= {
+            (row.vehicle_id, row.trip_no)
+            for row in db.query(SchedulingPlanDetail.vehicle_id, SchedulingPlanDetail.trip_no)
+            .join(TripStopRecord, TripStopRecord.plan_detail_id == SchedulingPlanDetail.id)
+            .filter(SchedulingPlanDetail.plan_id.in_(plan_ids))
+            .distinct()
+            .all()
+        }
+
+    # 待收回的下发记录（排除已动过的趟次），顺带统计两类「收不回来」的趟次
+    accepted_trips = 0
+    executed_kept = 0
+    revocable: list[DispatchRecord] = []
+    for record in (
+        db.query(DispatchRecord)
+        .filter(DispatchRecord.task_id == task.id)
+        .order_by(DispatchRecord.id)
+        .all()
+    ):
+        parts = record.trip_id.split(":")
+        trip_no = int(parts[3]) if len(parts) == 4 and parts[3].isdigit() else 0
+        # 确认接单是「司机已经收到了」的事实，只统计不抹除
+        if record.accepted_at is not None:
+            accepted_trips += 1
+        if (record.vehicle_id, trip_no) in executed:
+            executed_kept += 1
+            continue
+        revocable.append(record)
+
+    # 通知必须与真正收回去的趟次对应：先看这次收回了哪些车，
+    # 再按 notify_dispatch 的标题规则（含车牌）精确命中，
+    # 避免把「同一辆车、别的任务」的通知一起删掉。
+    vehicle_ids = {r.vehicle_id for r in revocable}
+    vehicles = (
+        db.query(Vehicle).filter(Vehicle.id.in_(vehicle_ids)).all() if vehicle_ids else []
+    )
+    notifications: list[MobileNotification] = []
+    for vehicle in vehicles:
+        notifications += (
+            db.query(MobileNotification)
+            .filter(
+                MobileNotification.biz_type == mobile_service.BIZ_DISPATCH,
+                MobileNotification.biz_id == task.id,
+                MobileNotification.title == f"新任务下发：{task.code}（{vehicle.plate_no}）",
+            )
+            .all()
+        )
+    # 兜底：老数据可能没有 biz_id，此时只按「任务号 + dispatch 类型」命中，
+    # 不然任务撤回了、消息还留在司机手机上点不动。
+    notifications += (
+        db.query(MobileNotification)
+        .filter(
+            MobileNotification.biz_type == mobile_service.BIZ_DISPATCH,
+            MobileNotification.biz_id.is_(None),
+            MobileNotification.title.like(f"新任务下发：{task.code}（%"),
+        )
+        .all()
+    )
+    # 老数据兜底可能与上面的精确命中重复，按 id 去重
+    notifications = list({row.id: row for row in notifications}.values())
+
+    for record in revocable:
+        db.delete(record)
+    for row in notifications:
+        db.delete(row)
+
+    # 未执行的明细退回 planned：它们从此不再出现在司机端「我的趟次」里
+    # （「我的趟次」只认 status=dispatched，见 services/mobile.py）。
+    reverted = 0
+    if plan_ids:
+        reverted = (
+            db.query(SchedulingPlanDetail)
+            .filter(
+                SchedulingPlanDetail.plan_id.in_(plan_ids),
+                SchedulingPlanDetail.status == "dispatched",
+            )
+            .update({"status": "planned"})
+        )
+
+    task.status = "confirmed"
+    db.commit()
+
+    # ★ 必须在删除之后、commit 之后再取收件人与未读数：撤销就是把消息删掉，
+    #   未读数要反映「删完」的结果，否则司机端红点会多出一条。
+    revoked_user_ids = sorted({row.user_id for row in notifications})
+    unread_by_user = {
+        user_id: mobile_service.unread_count_for_user(db, user_id)
+        for user_id in revoked_user_ids
+    }
+    drivers = len(revoked_user_ids)
+
+    # 尽力而为的实时告知：在线的司机端立刻把任务从列表里摘掉。
+    # 推不到（司机离线）不影响撤销本身 —— 消息记录已经删了，刷新即消失。
+    # 报文保持与「新消息」同一个外壳（type=notification + notification.biz_type），
+    # 这样小程序不需要为撤回单开一条分支：biz_type=revoked 走「任务被撤回」的处理。
+    #
+    # ★★ 为什么用 BackgroundTasks 而不是直接调 publish_to_users()：
+    #
+    #   `publish_to_users()` 内部走 `asyncio.run_coroutine_threadsafe(...)`，
+    #   把协程丢回事件循环后**本线程立即返回** —— 听起来不阻塞，
+    #   但这里踩过一次真实的坑：撤销接口是在「事务提交之后」才推送的，
+    #   一旦事件循环里有连接处于「已断开但还没被摘除」的状态，
+    #   投递就会卡住，于是**HTTP 请求迟迟不返回**：
+    #   库里数据其实已经改完了（任务已退回 confirmed、记录已删），
+    #   可前端却在转圈，用户以为撤销失败而重复点击。
+    #
+    #   放进 BackgroundTasks：FastAPI 在**响应发出之后**才执行它，
+    #   推送再慢也只影响那条后台任务，绝不可能拖住这次请求。
+    #   这与 realtime 模块「推送绝不能影响主流程」的设计约束是一致的。
+    background.add_task(
+        realtime.publish_to_users,
+        revoked_user_ids,
+        {
+            "type": "notification",
+            "notification": {
+                "biz_type": "revoked",
+                "biz_id": task.id,
+                "title": f"任务已撤回：{task.code}",
+                "content": "该任务已被调度撤回，趟次已从「我的趟次」中移除。",
+            },
+            "unread": None,
+            "unread_by_user": unread_by_user,
+            "task_id": task.id,
+            "task_code": task.code,
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+        },
+    )
+
+    message = f"已撤销 {len(revocable)} 个趟次的下发，任务 {task.code} 退回「已确认」"
+    if reverted:
+        message += f"，{reverted} 行计划明细退回 planned"
+    if notifications:
+        message += f"，收回 {len(notifications)} 条司机通知"
+    if accepted_trips:
+        message += f"；其中 {accepted_trips} 个趟次司机已确认接单（接单记录保留）"
+    if executed_kept:
+        message += f"；{executed_kept} 个趟次已有现场执行记录，未收回"
+
+    append_audit(
+        db,
+        actor=actor,
+        action="scheduling.undo_dispatch",
+        target_type="task",
+        target_name=task.code,
+        detail={
+            "撤销趟次": len(revocable),
+            "退回明细": reverted,
+            "收回通知": len(notifications),
+            "已接单未执行": accepted_trips,
+            "已有执行记录未收回": executed_kept,
+            "任务新状态": task.status,
+        },
+    )
+
+    return UndoDispatchResult(
+        task_id=task.id,
+        task_code=task.code,
+        status=task.status,
+        revoked_trips=len(revocable),
+        revoked_notifications=len(notifications),
+        drivers=drivers,
+        executed_kept=executed_kept,
+        accepted_trips=accepted_trips,
         message=message,
     )
 

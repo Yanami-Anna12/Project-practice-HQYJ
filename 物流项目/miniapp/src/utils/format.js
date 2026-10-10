@@ -169,9 +169,18 @@ export function exceptionSourceText(source) {
 
 /**
  * 确认接单状态 → 展示文案。
- * @param {object} trip 至少含 accepted / accepted_at
+ *
+ * ★ 已跑完的一律显示「已完成」，不显示「待确认」：
+ *   早先的写法对 `done 且从没点过确认` 的趟次会显示「待确认」，
+ *   于是绿卡上写着「待确认」，自相矛盾（已跑完的单子再点确认也没有意义）。
+ *
+ * @param {object} trip 至少含 accepted / accepted_at / trip_status
  */
 export function acceptStatusText(trip) {
+  if (tripState(trip) === 'done') {
+    const when = trip?.accepted_at ? formatDateTime(trip.accepted_at) : ''
+    return when ? `已完成 · ${when} 接单` : '已完成'
+  }
   if (!trip || !trip.accepted) return '待确认'
   const when = trip.accepted_at ? formatDateTime(trip.accepted_at) : ''
   return when ? `已确认接单 ${when}` : '已确认接单'
@@ -179,10 +188,70 @@ export function acceptStatusText(trip) {
 
 /**
  * 确认接单状态 → 标签样式类。
- * ★ 待确认用醒目色（tag-warn 橙），已确认用绿色（tag-done）。
+ *
+ * ★ 与卡片色条同一套三色语义（用户口径）：
+ *   未确认 = 红，已确认但没跑完 = 黄，已跑完 = 绿。
+ *   注意「已跑完」优先于「已确认」：跑完的单子哪怕没点过确认，也该是绿的。
  */
 export function acceptStatusClass(trip) {
-  return trip && trip.accepted ? 'tag-done' : 'tag-warn'
+  const state = tripState(trip)
+  if (state === 'done') return 'tag-done'
+  if (state === 'accepted') return 'tag-accepted'
+  return 'tag-pending'
+}
+
+/**
+ * 趟次的「三色状态」—— 全站唯一口径，色条、标签、排序都用它。
+ *
+ *   pending  未确认接单           → 红色
+ *   accepted 已确认但未完成       → 黄色
+ *   done     已完成（跑完了）     → 绿色
+ *
+ * ★ 为什么抽成一个函数：卡片颜色、状态标签、列表排序三处必须完全一致，
+ *   各写一份 if/else 迟早出现「卡片是黄的、标签是绿的」这种自相矛盾。
+ *
+ * @param {object} trip 趟次对象（列表项或详情对象）
+ * @returns {'pending'|'accepted'|'done'}
+ */
+export function tripState(trip) {
+  if (trip && trip.trip_status === 'done') return 'done'
+  return trip && trip.accepted ? 'accepted' : 'pending'
+}
+
+/** 三色状态 → 卡片色条 class（红/黄/绿） */
+export function tripCardClass(trip) {
+  return `trip-card-${tripState(trip)}`
+}
+
+/** 三色状态 → 中文短标签（色条旁边那行字的兜底文案） */
+export function tripStateLabel(trip) {
+  const map = { pending: '待确认', accepted: '已接单', done: '已完成' }
+  return map[tripState(trip)]
+}
+
+/**
+ * 看板「趟次明细」用的四态（比司机端多一档「正在跑」）。
+ *
+ * 后端 `manager/overview` 的 trip_briefs.state 就是这四个值：
+ *   running  有门店到店/完成但没全完   → 看板排最前（调度最该盯的）
+ *   accepted 已接单、一个门店都没打卡
+ *   pending  没接单也没打卡
+ *   done     该趟所有门店都完成
+ */
+export function briefStateLabel(state) {
+  const map = { running: '正在跑', accepted: '已接单', pending: '待确认', done: '已完成' }
+  return map[state] || state || '—'
+}
+
+/** 看板四态 → 标签样式类（与司机端三色同色系，外加「正在跑」的蓝色） */
+export function briefStateClass(state) {
+  const map = {
+    running: 'tag-running',
+    accepted: 'tag-accepted',
+    pending: 'tag-pending',
+    done: 'tag-done',
+  }
+  return map[state] || 'tag-planned'
 }
 
 /**
@@ -249,6 +318,7 @@ export function groupPlanTrips(details) {
     const list = grouped[key].slice().sort((a, b) => a.sequence - b.sequence)
     const head = list[0]
     const done = list.filter((r) => r.status === 'done' || r.status === 'completed').length
+    const arrived = list.filter((r) => r.status === 'arrived').length
     return {
       trip_key: `${head.vehicle_id}:${head.trip_no}`,
       vehicle_id: head.vehicle_id,
@@ -259,6 +329,15 @@ export function groupPlanTrips(details) {
       store_count: list.length,
       total_load: Math.round(list.reduce((sum, r) => sum + (Number(r.load_amount) || 0), 0) * 100) / 100,
       done_stores: done,
+      arrived_stores: arrived,
+      /**
+       * ★ 这里必须补上 trip_status：它是 acceptStatusText/acceptStatusClass/tripState
+       *   的判据之一。少了它，管理端「任务详情」里**已经跑完的趟次会被判成
+       *   「待确认」（红）/「已确认」**，与司机端看到的绿色「已完成」自相矛盾。
+       *   口径与后端 services/mobile.py 的 _trip_status() 完全一致：
+       *   全 done → done；有 arrived/done → running；否则 planned。
+       */
+      trip_status: done >= list.length && list.length ? 'done' : done || arrived ? 'running' : 'planned',
       accepted: !!head.accepted,
       accepted_at: head.accepted_at || null,
       stores: list,

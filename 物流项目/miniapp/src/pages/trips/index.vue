@@ -34,10 +34,12 @@ import {
   shiftDate,
   timeWindowLabel,
   today,
+  tripCardClass,
+  tripState,
   tripStatusClass,
   tripStatusText,
 } from '@/utils/format'
-import { accountProfile, requireLogin, setUnread } from '@/utils/ui'
+import { accountProfile, requireLogin, setUnread, unreadFromPayload } from '@/utils/ui'
 
 const scheduleDate = ref(today())
 const trips = ref([])
@@ -59,6 +61,10 @@ const isDriver = computed(() => accountProfile().isDriver)
 
 /** 待确认的趟次数（列表顶部提示用） */
 const pendingCount = computed(() => trips.value.filter((t) => !t.accepted).length)
+
+/** 已完成 / 还要跑的趟次数（列表顶部小结用：完成的趟次会沉到列表最底下） */
+const doneCount = computed(() => trips.value.filter((t) => t.trip_status === 'done').length)
+const todoCount = computed(() => trips.value.length - doneCount.value)
 
 const dateLabel = computed(() => {
   if (!scheduleDate.value) return '全部日期'
@@ -182,9 +188,27 @@ onLoad(() => {
   // ★ 实时推送：「新任务下发」类消息 → 轻提示 + 刷新趟次列表。
   //   提示不区分页面是否可见：司机可能正在消息 tab 上，
   //   这时候更要让他知道「有活来了」（红点已由 App.vue 全局更新）。
+  // ★ biz_type=revoked（管理员撤销下发）同理：趟次可能已经不在列表里了，
+  //   必须重拉，否则司机会盯着一趟已经被收回的任务去打卡。
   unsubscribe = subscribeNotifications((payload) => {
     if (payload.type !== 'notification') return
     const bizType = payload.notification && payload.notification.biz_type
+    // 这行日志是刻意留下的：实时推送「没反应」时，靠它区分
+    // 「报文没到」与「到了但条件不匹配」，比翻代码快得多。
+    console.log('[trips] 收到推送：', bizType, '页面可见=', visible.value)
+    if (bizType === 'revoked') {
+      const unreadNow = unreadFromPayload(payload)
+      if (unreadNow !== null) {
+        unread.value = unreadNow
+        setUnread(unreadNow)
+      }
+      uni.showToast({ title: '有任务被撤回', icon: 'none', duration: 2500 })
+      if (visible.value) {
+        load()
+        loadUnread()
+      }
+      return
+    }
     if (bizType !== 'dispatch') return
     uni.showToast({ title: '收到新任务下发', icon: 'none', duration: 2500 })
     if (visible.value) {
@@ -247,6 +271,30 @@ onPullDownRefresh(async () => {
       <text>有 {{ pendingCount }} 趟还没确认收到，请点「确认收到」</text>
     </view>
 
+    <!--
+      「一趟」是什么，第一次用的人真的看不懂（开发同事都问过）。
+      一句话说清：装一次货、跑一条线路，送完回仓再装下一趟。
+      另外提醒「第几趟」是按车牌算的，司机名下多台车时会有多个「第 1 趟」。
+    -->
+    <view v-if="isDriver && trips.length" class="hint-bar">
+      <text>
+        「一趟」＝ 装一次货、跑一趟线路，送完回仓库再装下一趟。
+        「第几趟」是<text class="strong">按车牌</text>算的 —— 你名下有多台车时，
+        每台车都会有自己的「第 1 趟」，看车牌区分。
+      </text>
+    </view>
+
+    <!--
+      本日小结：跑完的趟次**不会被删掉**，只是沉到列表最底下（可以回看送去哪几家）。
+      这里明写出来，司机才不会以为「完成就不见了」。
+    -->
+    <view v-if="isDriver && doneCount > 0" class="summary-bar">
+      <text>
+        今天 {{ trips.length }} 趟：待跑 {{ todoCount }} 趟 · 已完成 {{ doneCount }} 趟
+      </text>
+      <text class="summary-note">已完成的排在列表最下面，可点开回看</text>
+    </view>
+
     <!-- 加载中 -->
     <view v-if="loading" class="empty">加载中…</view>
 
@@ -265,11 +313,16 @@ onPullDownRefresh(async () => {
 
     <!-- 趟次卡片 -->
     <view v-else>
+      <!--
+        ★ 卡片颜色按「三色状态」走（tripCardClass）：
+          红 = 未确认接单   黄 = 已接单但没跑完   绿 = 已完成
+          排序也由后端按同一口径给（红 → 黄 → 绿），前端不再自己排。
+      -->
       <view
         v-for="trip in trips"
         :key="trip.trip_key"
         class="card trip-card"
-        :class="trip.accepted ? 'trip-card-ok' : 'trip-card-pending'"
+        :class="tripCardClass(trip)"
         @click="openTrip(trip)"
       >
         <view class="trip-head">
@@ -284,14 +337,21 @@ onPullDownRefresh(async () => {
           <text class="tag" :class="acceptStatusClass(trip)">
             {{ acceptStatusText(trip) }}
           </text>
+          <!--
+            ★ 已经跑完的趟次不再给「确认收到」按钮：
+              那时点确认没有任何意义（货都送完了），留着只会让人以为还有动作没做。
+              正常流程下司机是先确认再跑，跑完还没确认属于异常路径，这里只做展示。
+          -->
           <button
-            v-if="!trip.accepted"
+            v-if="tripState(trip) === 'pending'"
             class="btn btn-primary accept-btn"
             :disabled="acceptingKey === trip.trip_key"
             @click.stop="confirmTrip(trip)"
           >
             {{ acceptingKey === trip.trip_key ? '确认中…' : '确认收到' }}
           </button>
+          <text v-else-if="tripState(trip) === 'accepted'" class="accept-tip">已接单，待出车</text>
+          <text v-else class="accept-skip">已跑完，无需确认</text>
         </view>
 
         <view class="row">
@@ -301,9 +361,14 @@ onPullDownRefresh(async () => {
           </text>
         </view>
         <view class="row">
-          <text class="row-label">时段</text>
+          <text class="row-label">出车顺序</text>
           <text class="row-value">
-            {{ timeWindowLabel(trip.time_window) }} · 第 {{ trip.trip_no }} 趟
+            <!-- ★ 必须带上车牌：司机名下多台车时，会有多个「第 1 趟」，
+                 只写「第 1 趟」根本分不清是哪台车的第 1 趟。 -->
+            <text class="strong">{{ trip.plate_no }}</text>
+            <text class="strong"> 今天第 {{ trip.trip_no }} 趟</text>
+            <text v-if="trip.vehicle_trip_count > 1">（本车共 {{ trip.vehicle_trip_count }} 趟）</text>
+            <text> · {{ timeWindowLabel(trip.time_window) }}送</text>
           </text>
         </view>
         <view class="row">
@@ -403,20 +468,72 @@ onPullDownRefresh(async () => {
   font-size: 26rpx;
 }
 
+/* 「一趟是什么」的说明条：灰底、不抢眼，但第一次看的人能读懂 */
+.hint-bar {
+  background: #eef3fb;
+  border-left: 8rpx solid #1668dc;
+  color: #3d5a80;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 20rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+
+/* 本日小结条：让「已完成」的趟次有存在感（它们沉在列表最底下） */
+.summary-bar {
+  display: flex;
+  flex-direction: column;
+  background: #e8f7ee;
+  border-left: 8rpx solid #18a058;
+  color: #14724a;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 20rpx;
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.summary-note {
+  color: #4b8b6e;
+  font-size: 22rpx;
+  margin-top: 4rpx;
+}
+
+/* 关键信息加重（如「本车今天第 1 趟」「按车牌」） */
+.strong {
+  font-weight: 600;
+  color: #1f2329;
+}
+
 /*
- * 左侧色条区分确认状态：
- *   未确认 = 橙色（要干活）  已确认 = 绿色（已经收到）
+ * 左侧色条 = 趟次的「三色状态」（用户口径，与右上角标签、列表排序完全一致）：
+ *   红 pending  未确认接单 —— 需要司机动手，排最上面
+ *   黄 accepted 已接单但没跑完 —— 在手上，排中间
+ *   绿 done     已完成 —— 可以回看，沉到最下面
+ * ★ 颜色别在页面里另写一套：class 由 utils/format.js 的 tripCardClass() 给，
+ *   那边的 tripState() 是三色的唯一定义处。
  */
 .trip-card {
-  border-left: 8rpx solid #1668dc;
+  border-left: 8rpx solid #8a9099;
 }
 
 .trip-card-pending {
-  border-left-color: #d97706;
+  border-left-color: #d03050;
 }
 
-.trip-card-ok {
+.trip-card-accepted {
+  border-left-color: #d9a406;
+}
+
+.trip-card-done {
   border-left-color: #18a058;
+}
+
+/* 已接单待出车的小提示（黄色系，与色条一致） */
+.accept-tip {
+  font-size: 22rpx;
+  color: #b7791f;
 }
 
 /* 确认接单状态条：左侧状态标签 + 右侧按钮 */
@@ -432,6 +549,12 @@ onPullDownRefresh(async () => {
   line-height: 2.2;
   padding: 0 28rpx;
   margin: 0;
+}
+
+/* 已跑完但没确认过的趟次：不给按钮，只给一句灰字说明 */
+.accept-skip {
+  font-size: 22rpx;
+  color: #8a9099;
 }
 
 .trip-head {
