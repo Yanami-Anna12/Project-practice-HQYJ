@@ -7,3 +7,22 @@
 # 索引里仍按 LF 存放（git 惯例），检出时统一转成 CRLF。
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# --------------------------------------------------------------------------
+# 源码一律锁定 LF
+# --------------------------------------------------------------------------
+# ★ 为什么必须显式写：本机 `core.autocrlf=true`，而构建脚本
+#   （物流项目/miniapp/scripts/inject-appid.mjs）会重写 manifest.json 并按 LF 写盘；
+#   若 git 下次检出又把它转回 CRLF，就会「每次构建都冒出一个假 diff」。
+#   锁定 eol=lf 后脚本写 LF、git 也按 LF 存取，内容才稳定。
+*.json text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.vue  text eol=lf
+*.md   text eol=lf
+*.py   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf

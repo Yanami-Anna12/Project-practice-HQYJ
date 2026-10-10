@@ -5,9 +5,14 @@
   "description": "车辆智能调度系统 · 司机端小程序（uni-app + Vue 3 + Vite）",
   "scripts": {
     "dev:h5": "uni",
+    "appid:inject": "node scripts/inject-appid.mjs",
+    "appid:restore": "node scripts/inject-appid.mjs --restore-after",
+    "predev:mp-weixin": "node scripts/inject-appid.mjs",
     "dev:mp-weixin": "uni -p mp-weixin",
     "build:h5": "uni build",
-    "build:mp-weixin": "uni build -p mp-weixin"
+    "prebuild:mp-weixin": "node scripts/inject-appid.mjs",
+    "build:mp-weixin": "uni build -p mp-weixin",
+    "postbuild:mp-weixin": "node scripts/inject-appid.mjs --restore-after"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-4060620250520001",
