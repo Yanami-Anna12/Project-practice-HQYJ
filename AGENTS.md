@@ -122,3 +122,34 @@
 - **说人话**：少用分层标题和术语堆砌。
 - 演示优先用**浏览器 H5**，微信开发者工具容易出环境问题。⚠️ 但**实时推送/H5 收不到**（见坑 11）：要现场演「管理员下发→司机当场收到」，只能用微信开发者工具；H5 演示就靠「切页面/下拉刷新」。
 - 成本敏感：能用一次调用解决的，不要用三次。
+
+---
+
+## 8. 换一台新电脑怎么跑起来（已实测）
+
+从 GitHub 克隆下来是 **7.2 MB、0 个 node_modules**（依赖本来就不进仓库），按下面三步即可：
+
+**① 后端（物流项目 / 充电桩项目 各自一份）**
+`
+cd 物流项目\backend
+copy .env.example .env        # 改 DB_PASSWORD；JWT_SECRET 换一个随机长串
+python seed.py                # ★ 必须跑！建表 + 建管理员/调度员/driver1~8 + 基础数据
+`
+★ 不跑 seed.py 也能启动，但**库里没有任何数据**（连不上 MySQL 时还会自动回退到空 SQLite），
+表现为「登录不进去、页面全空」—— 这是新电脑最容易踩的坑。
+
+**② 前端（三个前端各一份）**
+`
+cd 物流项目\frontend   && npm install && npm run dev     # 网页端 5175
+cd 物流项目\miniapp    && npm install && npm run dev:h5  # 小程序 H5 5173
+cd 充电桩项目\frontend && npm install && npm run dev     # 充电桩网页端 5185
+`
+一律用 **npm**（pnpm 在本机会卡死在链接阶段）。
+
+**③ 要真机测小程序时，再补两处本机专属配置**（不做也能构建，只是扫码用不了）
+- 物流项目/miniapp/src/config.js 的 DEV_HOST 改成**这台电脑的局域网 IP**（ipconfig 查），
+  且后端要用 python run.py --host 0.0.0.0 起；后端只绑 127.0.0.1 时手机连不上。
+- 物流项目/miniapp/.appid（一行微信 AppID，已 gitignore；这是为了避开 GitHub secret scanner）。
+
+**验证过的接口**：admin 登录（权限 30 项）、driver1 登录、/api/mobile/manager/overview、
+/api/scheduling/tasks、/api/mobile/my-trips、/api/mobile/profile 全部 200。
