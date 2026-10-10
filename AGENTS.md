@@ -1,4 +1,4 @@
-# 项目实践 · 交接说明
+﻿# 项目实践 · 交接说明
 
 > **新会话开场只要说一句：「先读 AGENTS.md，然后……」** 下面的背景不用再复述。
 
@@ -153,3 +153,16 @@ cd 充电桩项目\frontend && npm install && npm run dev     # 充电桩网页�
 
 **验证过的接口**：admin 登录（权限 30 项）、driver1 登录、/api/mobile/manager/overview、
 /api/scheduling/tasks、/api/mobile/my-trips、/api/mobile/profile 全部 200。
+
+---
+
+## 8. 换新电脑（3 步）
+
+1. cd 物流项目\backend → copy .env.example .env（填数据库密码）→ python run.py
+   ★ 后端**首次启动会自动建表并灌演示数据**（发现空库才做，已有数据不覆盖；
+   AUTO_SEED_ON_EMPTY=false 可关）。等首次启动跑完再访问。
+2. 三个前端各自 
+pm install 后 
+pm run dev（一律用 npm，pnpm 在本机会卡死）。
+3. 真要手机测小程序：miniapp/src/config.js 的 DEV_HOST 改成这台电脑的局域网 IP，
+   后端用 --host 0.0.0.0 起；miniapp/.appid 自己建（不进仓库）。

@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.database import ensure_database_exists
+from app.database import Base, ensure_database_exists
 from app.errors import register_exception_handlers
 from app.routers import (
     attachments,
@@ -111,12 +112,36 @@ def create_app() -> FastAPI:
         try:
             created = ensure_database_exists()
             if created:
-                logger.warning(
-                    "数据库 %s 是本次新建的，请执行 python seed.py 载入初始数据",
-                    settings.DB_NAME,
-                )
+                logger.warning("数据库 %s 是本次新建的", settings.DB_NAME)
         except Exception as exc:  # noqa: BLE001
             logger.error("数据库检查失败：%s", exc)
+
+        # ★ 空库自动灌演示数据：换一台电脑时不必再手动跑 `python seed.py`。
+        #   只在「账号表一条都没有」时触发，已有数据绝不覆盖；
+        #   想关掉就设 AUTO_SEED_ON_EMPTY=false。
+        if settings.AUTO_SEED_ON_EMPTY:
+            try:
+                from app.database import SessionLocal, engine
+                from app.models import SysUser
+
+                Base.metadata.create_all(bind=engine)
+                db = SessionLocal()
+                try:
+                    empty = db.query(SysUser).first() is None
+                finally:
+                    db.close()
+                if empty:
+                    import sys
+
+                    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+                    import seed as seed_module
+
+                    logger.warning("检测到空库，正在自动载入演示数据（等价于 python seed.py）…")
+                    seed_module.main()
+                    logger.warning("演示数据已就绪，可直接用 admin / driver1 等账号登录")
+            except Exception as exc:  # noqa: BLE001
+                logger.error("自动载入演示数据失败（不影响启动，可手动跑 python seed.py）：%s", exc)
+
         logger.info("数据库：%s", settings.url_safe())
         logger.info("LLM 方案解释：%s", "已启用" if settings.llm_enabled else "未配置（降级）")
 

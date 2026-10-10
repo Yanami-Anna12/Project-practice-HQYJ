@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = ""
     # 换台电脑没有 MySQL 时自动改用本地 SQLite，保证开箱即跑；设为 False 可强制要求 MySQL
     DB_FALLBACK_SQLITE: bool = True
+    # 首次启动发现「库里一个账号都没有」时，自动载入演示数据（等价于跑 python seed.py）。
+    # 换新电脑时省掉手动 seed；已有数据的库永远不会被覆盖。
+    AUTO_SEED_ON_EMPTY: bool = True
     # SQLite 文件位置（相对 backend/ 目录）
     SQLITE_PATH: str = "data/logistics.db"
 
