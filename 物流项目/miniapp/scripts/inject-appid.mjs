@@ -46,13 +46,17 @@ function resolveAppId() {
 
 /** 读文件并记住它的行尾，写回时保持一致，避免产生纯行尾的假 diff */
 function readManifest() {
-  const raw = fs.readFileSync(manifestPath, 'utf8')
+  // ★ 必须剥掉 UTF-8 BOM：用 PowerShell 的 `Set-Content -Encoding UTF8` 改过这个文件的话
+  //   开头会多出 EF BB BF，`JSON.parse` 会直接抛 `Unexpected token ''`，
+  //   而 uni 自己又能容忍 BOM —— 结果就是「构建正常但注入静默失效」。踩过一次。
+  const raw = fs.readFileSync(manifestPath, 'utf8').replace(/^\uFEFF/, '')
   return { manifest: JSON.parse(raw), eol: raw.includes('\r\n') ? '\r\n' : '\n' }
 }
 
 function writeManifest(manifest, eol) {
   const json = JSON.stringify(manifest, null, 2)
   const text = eol === '\r\n' ? json.replace(/\n/g, '\r\n') : json
+  // 不带 BOM 写盘（第三个参数省略即 UTF-8 无 BOM）
   fs.writeFileSync(manifestPath, `${text}${eol}`, 'utf8')
 }
 
