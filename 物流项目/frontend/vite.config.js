@@ -14,6 +14,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: '127.0.0.1',
     port: 5175,
+    // ★ 端口被占用/被系统保留时自动顺延（5176、5177…），并打印实际地址。
+    //   为什么必须开：有些 Windows 机器会把一段端口划给 Hyper-V/WSL 保留
+    //   （`netsh int ipv4 show excludedportrange protocol=tcp` 可查），
+    //   落在保留段里的端口连 bind 都不允许，直接报
+    //   `Error: listen EACCES: permission denied 127.0.0.1:5175` —— 那不是代码问题。
+    strictPort: false,
     // 代理模式下后端地址可用 VITE_PROXY_TARGET 覆盖
     proxy:
       mode === 'static'
