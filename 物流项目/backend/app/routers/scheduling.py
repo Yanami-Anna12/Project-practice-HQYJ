@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import date
 from typing import Annotated
 
@@ -51,11 +52,14 @@ from app.schemas import (
     TaskDetailOut,
     TaskOut,
 )
+from app.services import mobile as mobile_service
 from app.services import scheduling as sched
 from app.services.audit import append_audit
 from app.services.solver import check_assignable
 
 router = APIRouter(prefix="/scheduling", tags=["智能调度"])
+
+logger = logging.getLogger(__name__)
 
 Reader = Annotated[SysUser, Depends(require_permission("scheduling:read"))]
 Creator = Annotated[SysUser, Depends(require_permission("scheduling:create"))]
@@ -336,6 +340,16 @@ def dispatch_task(
         task.status = "dispatched"
     db.commit()
 
+    # ★ 司机端站内消息：下发成功后给相关司机各写一条。
+    #   通知属于「下发之后的锦上添花」，任何异常都只记日志 ——
+    #   绝不能让通知失败把一次成功的下发变成 500（那样司机反而看不到任务）。
+    try:
+        notified = mobile_service.notify_dispatch(db, task.id)
+    except Exception as exc:  # noqa: BLE001
+        db.rollback()
+        notified = 0
+        logger.exception("下发通知生成失败（不影响下发本身）：%s", exc)
+
     append_audit(
         db,
         actor=actor,
@@ -346,6 +360,7 @@ def dispatch_task(
             "方案": plan.plan_code,
             "下发趟次": dispatched,
             "重复跳过": skipped,
+            "通知司机": notified,
         },
     )
 

@@ -95,6 +95,9 @@ def _store_out(db, store: Store) -> StoreOut:
         address=store.address,
         contact=store.contact,
         phone=store.phone,
+        # 坐标是司机端「一键导航」的必要字段，显式带上（Numeric → float）
+        latitude=float(store.latitude) if store.latitude is not None else None,
+        longitude=float(store.longitude) if store.longitude is not None else None,
         is_intersection=store.is_intersection,
         is_active=store.is_active,
         route_codes=codes,

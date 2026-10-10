@@ -49,6 +49,18 @@ class PermissionDeniedError(AppError):
     status_code = status.HTTP_403_FORBIDDEN
 
 
+class ForbiddenError(AppError):
+    """已通过权限校验，但「不是你的数据」。
+
+    与 PermissionDeniedError 的区别：前者是「你没有这个功能权限」，
+    后者是「你连自己的身份都还没对上」（如未绑定司机档案、
+    想操作别人名下车辆的趟次）。分开是为了让日志能区分
+    「配置问题」和「越权访问」。
+    """
+
+    status_code = status.HTTP_403_FORBIDDEN
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """把异常统一渲染成 {"error": "..."}。"""
 

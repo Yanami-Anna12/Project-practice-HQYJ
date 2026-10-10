@@ -137,6 +137,13 @@ class DispatchRecord(Base):
     """下发执行记录。
 
     ★ 幂等设计：task_id + plan_id + trip_id 唯一（需求文档关键技术风险里的「下发重复」）。
+
+    ★ 司机确认接单（accepted_at / accepted_by）为什么加在这张表上：
+      本表的粒度正好是「某任务 · 某方案 · 某车 · 某趟」，与司机端的
+      trip_key（task:plan:vehicle:trip）**一一对应**。司机确认的对象就是
+      「这一趟我收到了」，所以确认事实天然属于这条记录，不需要另建表，
+      也不会与 scheduling_plan_detail（计划快照，只读）冲突。
+      两个字段都可空：老库里的历史记录没有确认时间，语义是「尚未确认」。
     """
 
     __tablename__ = "dispatch_record"
@@ -155,6 +162,10 @@ class DispatchRecord(Base):
     dispatched_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=now_default()
     )
+    # 司机确认接单的时间（首次确认写入后不再覆盖；NULL = 尚未确认）
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # 确认人：sys_user.id（存 user_id 而不是 md_driver.id，与站内消息的收件人口径一致）
+    accepted_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class ExceptionEvent(Base):

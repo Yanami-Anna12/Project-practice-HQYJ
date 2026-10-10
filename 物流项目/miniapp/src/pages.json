@@ -1,0 +1,81 @@
+{
+  "pages": [
+    {
+      "path": "pages/trips/index",
+      "style": {
+        "navigationBarTitleText": "我的趟次",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/messages/index",
+      "style": {
+        "navigationBarTitleText": "消息中心",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/board/index",
+      "style": {
+        "navigationBarTitleText": "今日看板",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/board/tasks",
+      "style": {
+        "navigationBarTitleText": "任务列表",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/board/task-detail",
+      "style": {
+        "navigationBarTitleText": "任务详情"
+      }
+    },
+    {
+      "path": "pages/board/exceptions",
+      "style": {
+        "navigationBarTitleText": "异常列表",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/trips/detail",
+      "style": {
+        "navigationBarTitleText": "趟次详情"
+      }
+    },
+    {
+      "path": "pages/exception/report",
+      "style": {
+        "navigationBarTitleText": "异常上报"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "车辆智能调度",
+    "navigationBarBackgroundColor": "#1668dc",
+    "backgroundColor": "#f5f6f8"
+  },
+  "h5": {
+    "tabBar": {
+      "list": []
+    }
+  }
+}

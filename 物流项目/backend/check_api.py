@@ -29,7 +29,9 @@ def main() -> int:
     args = ap.parse_args()
     base = args.base.rstrip("/")
 
-    c = httpx.Client(base_url=base, timeout=20.0)
+    # trust_env=False：开着系统代理（Clash 等）的机器上，httpx 会把 127.0.0.1
+    # 的请求也发给代理，脚本会误报成 502。绕过代理只是本机环境问题，与接口无关。
+    c = httpx.Client(base_url=base, timeout=20.0, trust_env=False)
 
     # ---------- 1. 健康检查 ----------
     r = c.get("/api/health")
@@ -54,7 +56,7 @@ def main() -> int:
         return 1
     token = r.json()["token"]
     admin_perms = r.json()["user"]["permissions"]
-    check("管理员权限数 = 29", len(admin_perms) == 29, f"实际 {len(admin_perms)}")
+    check("管理员权限数 = 30", len(admin_perms) == 30, f"实际 {len(admin_perms)}")
 
     auth = {"Authorization": f"Bearer {token}"}
 
@@ -67,7 +69,9 @@ def main() -> int:
     # ---------- 7. 系统管理：用户 ----------
     r = c.get("/api/users", headers=auth)
     users = r.json() if r.status_code == 200 else []
-    check("用户列表 6 条", len(users) == 6, f"实际 {len(users)}")
+    # 6 个系统账号（admin/dispatcher/dataadmin/viewer/multi/disabled）
+    # + 3 个司机端账号（driver1~3，seed 给前 3 个司机开号）= 9
+    check("用户列表 9 条", len(users) == 9, f"实际 {len(users)}")
     multi = next((u for u in users if u["username"] == "multi"), None)
     # multi 绑定 dispatcher(9 个权限) + viewer(5 个)，而 viewer 的权限是 dispatcher 的子集，
     # 所以并集仍是 9 —— 这正是「并集」的含义：不会因为多绑一个角色就凭空多出权限。
@@ -95,7 +99,7 @@ def main() -> int:
     # ---------- 9. 权限点停用影响 ----------
     r = c.get("/api/permissions", headers=auth)
     perms = r.json() if r.status_code == 200 else []
-    check("权限点 29 个", len(perms) == 29, f"实际 {len(perms)}")
+    check("权限点 30 个", len(perms) == 30, f"实际 {len(perms)}")
 
     # ---------- 10. 字典 ----------
     r = c.get("/api/dicts/types", headers=auth)

@@ -8,6 +8,21 @@
   - 一.3 现有条件：四米二 28 台 630-800 日 2 趟 / 大包 3 台 300-420 日 2 趟 / 小包 9 台 1-300 日 4 趟
   - 一.5 需求明细：上午门店上午送、下午门店下午送、门店与线路多对多
   - 二.2.3 地形与通行规则：普通/中控/严控 × 全能去/大小包能去/小包能去
+
+★ 本脚本还会做三件与司机端（小程序）相关的事：
+
+  1. **给已存在的库补列**（app/migrations.py）：`md_driver.user_id`、
+     `md_store.latitude/longitude` 是后加的可空列。`create_all()` 只建缺失的表、
+     **不会给老表加列**，而 SQLite / MySQL 8.0 都没有 `ADD COLUMN IF NOT EXISTS`，
+     所以由 `create_all_tables()` 统一调一次轻量迁移。老库跑完 seed 即可直接用。
+  2. **给每个司机开登录账号并绑定档案**（driver1 / driver2 / … 按 md_driver.code
+     排序对应，密码取 settings.DEMO_PASSWORD），账号会打印在输出末尾。
+     ★ 必须开满全部司机：站内消息按 md_driver.user_id 找人，
+       没有账号的司机收不到任何任务通知（notify_dispatch 只会记日志跳过）。
+  3. **给门店填演示坐标**（长三角一带真实近似经纬度），司机端才能一键导航。
+
+    司机端要看到「我的趟次」还需要有已下发的任务，那一步由
+    `python demo_mobile.py` 走真实下发链路生成（seed 只负责主数据）。
 """
 
 from __future__ import annotations
@@ -22,6 +37,7 @@ from app.config import settings
 from app.database import SessionLocal, create_all_tables, drop_all_tables, ensure_database_exists
 from app.models import (
     Driver,
+    MobileNotification,
     Route,
     Store,
     StoreRouteMapping,
@@ -33,6 +49,7 @@ from app.models import (
     SysRole,
     SysUser,
     TerrainRule,
+    TripStopRecord,
     Vehicle,
     VehicleTerrainCapability,
     VehicleType,
@@ -78,6 +95,8 @@ PERMISSIONS: list[tuple[str, str, str, str]] = [
     ("reports:view", "查看报表", "智能调度", "view"),
     ("integrations:manage", "维护接口集成", "集成监控", "manage"),
     ("monitor:read", "查看监控预警", "集成监控", "read"),
+    # 司机端（小程序）准入权限点。司机角色默认持有；管理员是 *，自动包含。
+    ("mobile:use", "使用司机端", "司机端", "use"),
 ]
 
 ROLES: list[tuple[str, str, str, list[str]]] = [
@@ -109,6 +128,12 @@ ROLES: list[tuple[str, str, str, list[str]]] = [
         "只能查看，不能做任何修改",
         ["stores:read", "routes:read", "vehicles:read", "scheduling:read", "reports:view"],
     ),
+    (
+        "driver",
+        "司机",
+        "司机端小程序：查看自己的趟次、现场打卡、异常上报、站内消息",
+        ["mobile:use"],
+    ),
 ]
 
 USERS: list[tuple[str, str, str, str, str, list[str]]] = [
@@ -120,6 +145,14 @@ USERS: list[tuple[str, str, str, str, str, list[str]]] = [
     ("multi", "多角色用户", "调度中心", "13800000005", "DEMO_PASSWORD", ["dispatcher", "viewer"]),
     ("disabled", "已停用账号", "运营部", "13800000006", "DEMO_PASSWORD", ["viewer"]),
 ]
+
+# 司机端登录账号：给**每个**司机各开一个账号并绑定（md_driver.user_id）。
+# ★ 账号密码登录复用 POST /api/auth/login；不做微信登录，所以司机必须有账号。
+#   ★ 为什么是全部而不是前 3 个：站内消息的收件人取自 md_driver.user_id，
+#     没有账号的司机在下发时会被 notify_dispatch 静默跳过（只记日志），
+#     表现为「小程序里怎么等都没有反应」。只给前 3 个开号会让另外 5 个司机
+#     永远收不到任务通知 —— 那是缺陷，不是「需要覆盖的现实情况」。
+DRIVER_USERNAME_PREFIX = "driver"
 
 # 字典：车辆类型 / 地形 / 能力 / 时段 / 任务状态 / 方案 / 班次
 DICT_TYPES: list[tuple[str, str, str]] = [
@@ -207,24 +240,28 @@ ROUTES: list[tuple[str, str, str, str, bool, str]] = [
     ("R05", "开发区线", "normal", "经济开发区", True, "部分时段限行"),
 ]
 
-STORES: list[tuple[str, str, str, str, int, str, str, str, str]] = [
-    # (code, name, terrain_type, delivery_window, priority, area, address, contact, phone)
-    ("S001", "城东旗舰店", "normal", "AM", 10, "城东片区", "城东大道 1 号", "刘店长", "13900000001"),
-    ("S002", "城东社区店", "normal", "AM", 20, "城东片区", "城东二路 18 号", "陈店长", "13900000002"),
-    ("S003", "东湖便利店", "medium", "AM", 30, "城东片区", "东湖路 7 号", "赵店长", "13900000003"),
-    ("S004", "城西中心店", "normal", "PM", 10, "城西片区", "城西大道 88 号", "孙店长", "13900000004"),
-    ("S005", "西城仓储店", "normal", "PM", 20, "城西片区", "西城工业路 5 号", "周店长", "13900000005"),
-    ("S006", "城南大卖场", "medium", "AM", 10, "城南片区", "城南大道 200 号", "吴店长", "13900000006"),
-    ("S007", "南苑严控店", "strict", "PM", 40, "城南片区", "南苑路 12 号", "郑店长", "13900000007"),
-    ("S008", "城南新区店", "normal", "PM", 30, "城南片区", "新区一路 3 号", "冯店长", "13900000008"),
-    ("S009", "城北批发店", "normal", "AM", 10, "城北片区", "城北大道 66 号", "蒋店长", "13900000009"),
-    ("S010", "北环中控店", "medium", "AM", 30, "城北片区", "北环路 21 号", "沈店长", "13900000010"),
-    ("S011", "北苑社区店", "normal", "PM", 20, "城北片区", "北苑街 9 号", "韩店长", "13900000011"),
-    ("S012", "开发区店", "normal", "AM", 20, "经济开发区", "开发大道 100 号", "杨店长", "13900000012"),
-    ("S013", "开发二路店", "normal", "PM", 30, "经济开发区", "开发二路 15 号", "朱店长", "13900000013"),
-    ("S014", "高铁站店", "medium", "AM", 40, "城东片区", "高铁站广场 B1", "秦店长", "13900000014"),
-    ("S015", "老城区店", "strict", "AM", 50, "城北片区", "老城正街 2 号", "尤店长", "13900000015"),
-    ("S016", "滨江店", "normal", "PM", 20, "城南片区", "滨江路 33 号", "许店长", "13900000016"),
+STORES: list[tuple[str, str, str, str, int, str, str, str, str, float, float]] = [
+    # (code, name, terrain_type, delivery_window, priority, area, address, contact, phone,
+    #  latitude, longitude)
+    # ★ 坐标是长三角一带的真实近似位置（苏州 / 上海 / 无锡 / 昆山），
+    #   填进高德或百度地图能正常定位打点，司机端「一键导航」才能用。
+    #   地址文案保留了原来的「城东大道 1 号」这类演示名，坐标才是可用的部分。
+    ("S001", "城东旗舰店", "normal", "AM", 10, "城东片区", "城东大道 1 号", "刘店长", "13900000001", 31.3120, 120.6280),
+    ("S002", "城东社区店", "normal", "AM", 20, "城东片区", "城东二路 18 号", "陈店长", "13900000002", 31.3010, 120.6410),
+    ("S003", "东湖便利店", "medium", "AM", 30, "城东片区", "东湖路 7 号", "赵店长", "13900000003", 31.2880, 120.6520),
+    ("S004", "城西中心店", "normal", "PM", 10, "城西片区", "城西大道 88 号", "孙店长", "13900000004", 31.3205, 120.5560),
+    ("S005", "西城仓储店", "normal", "PM", 20, "城西片区", "西城工业路 5 号", "周店长", "13900000005", 31.3350, 120.5410),
+    ("S006", "城南大卖场", "medium", "AM", 10, "城南片区", "城南大道 200 号", "吴店长", "13900000006", 31.2420, 120.6120),
+    ("S007", "南苑严控店", "strict", "PM", 40, "城南片区", "南苑路 12 号", "郑店长", "13900000007", 31.2280, 120.5980),
+    ("S008", "城南新区店", "normal", "PM", 30, "城南片区", "新区一路 3 号", "冯店长", "13900000008", 31.2540, 120.6350),
+    ("S009", "城北批发店", "normal", "AM", 10, "城北片区", "城北大道 66 号", "蒋店长", "13900000009", 31.3720, 120.6080),
+    ("S010", "北环中控店", "medium", "AM", 30, "城北片区", "北环路 21 号", "沈店长", "13900000010", 31.3860, 120.6220),
+    ("S011", "北苑社区店", "normal", "PM", 20, "城北片区", "北苑街 9 号", "韩店长", "13900000011", 31.3980, 120.6050),
+    ("S012", "开发区店", "normal", "AM", 20, "经济开发区", "开发大道 100 号", "杨店长", "13900000012", 31.3480, 120.7250),
+    ("S013", "开发二路店", "normal", "PM", 30, "经济开发区", "开发二路 15 号", "朱店长", "13900000013", 31.3390, 120.7480),
+    ("S014", "高铁站店", "medium", "AM", 40, "城东片区", "高铁站广场 B1", "秦店长", "13900000014", 31.3350, 120.6760),
+    ("S015", "老城区店", "strict", "AM", 50, "城北片区", "老城正街 2 号", "尤店长", "13900000015", 31.3150, 120.5980),
+    ("S016", "滨江店", "normal", "PM", 20, "城南片区", "滨江路 33 号", "许店长", "13900000016", 31.2650, 120.5620),
 ]
 
 # (store_code, route_code, priority, is_primary) —— 含交界门店（挂多条线路）
@@ -326,6 +363,54 @@ def _seed_users(db: Session, roles: dict[str, SysRole]) -> None:
     logger.info("用户：%d 个", len(USERS))
 
 
+def _seed_driver_accounts(db: Session, roles: dict[str, SysRole]) -> list[str]:
+    """给每个司机开登录账号并绑定档案，返回「账号 / 密码」说明行。
+
+    ★ 为什么必须开账号：司机端登录复用 POST /api/auth/login（账号密码），
+      而 sys_user 与 md_driver 原本没有任何关联字段 —— 所以模型上补了
+      `md_driver.user_id`（见 app/models/master.py 与 app/migrations.py）。
+      这里把「建账号」和「绑档案」一次做完，seed 跑完就能直接登录司机端。
+
+    ★ 账号命名按**司机档案的 code 排序**（D001 → driver1、D002 → driver2 …），
+      所以司机档案顺序不变时，driver1/2/3 的绑定关系与旧版完全一致，
+      新增的只是 driver4 ~ driver8。
+
+    幂等：账号按用户名查、绑定关系按 user_id 查，重复执行不会重复建号，
+    也不会覆盖已被手工改过的绑定关系（只补 user_id 为空的司机）。
+    """
+    lines: list[str] = []
+    drivers = (
+        db.query(Driver).filter(Driver.is_active.is_(True)).order_by(Driver.code).all()
+    )
+    role = roles.get("driver")
+    password = settings.DEMO_PASSWORD
+
+    for index, driver in enumerate(drivers, start=1):
+        username = f"{DRIVER_USERNAME_PREFIX}{index}"
+        user = db.query(SysUser).filter(SysUser.username == username).one_or_none()
+        if user is None:
+            user = SysUser(
+                username=username,
+                password_hash=hash_password(password),
+                nickname=f"{driver.name}（{driver.code}）",
+                dept="配送部",
+                phone=driver.phone,
+                is_active=True,
+            )
+            db.add(user)
+            db.flush()
+        if role is not None:
+            user.roles = [role] if role not in user.roles else user.roles
+        # 只补空绑定：已经指向别的账号说明是人工改过的，seed 不该覆盖
+        if not driver.user_id:
+            driver.user_id = user.id
+        lines.append(f"  {username} / {password}  —— {driver.name}（{driver.code}）")
+
+    db.commit()
+    logger.info("司机账号：%d 个（覆盖全部在岗司机，已绑定 md_driver.user_id）", len(lines))
+    return lines
+
+
 def _seed_dicts(db: Session) -> None:
     for code, name, description in DICT_TYPES:
         if db.query(SysDictType).filter(SysDictType.code == code).one_or_none() is None:
@@ -413,15 +498,34 @@ def _seed_master(db: Session) -> None:
     db.flush()
 
     # 门店
-    for code, name, terrain, window, priority, area, address, contact, phone in STORES:
-        if db.query(Store).filter(Store.code == code).one_or_none() is None:
+    for (
+        code,
+        name,
+        terrain,
+        window,
+        priority,
+        area,
+        address,
+        contact,
+        phone,
+        latitude,
+        longitude,
+    ) in STORES:
+        store = db.query(Store).filter(Store.code == code).one_or_none()
+        if store is None:
             db.add(
                 Store(
                     code=code, name=name, terrain_type=terrain, delivery_window=window,
                     priority=priority, area=area, address=address, contact=contact,
-                    phone=phone, is_intersection=False, is_active=True,
+                    phone=phone, latitude=latitude, longitude=longitude,
+                    is_intersection=False, is_active=True,
                 )
             )
+        elif store.latitude is None or store.longitude is None:
+            # 兼容老库：坐标是后加的字段（见 app/migrations.py 的加列迁移），
+            # 已有门店补上演示坐标，否则司机端拿不到导航坐标。
+            store.latitude = latitude
+            store.longitude = longitude
     db.flush()
 
     # 门店线路映射 + 交界标记
@@ -553,6 +657,9 @@ def main() -> None:
         _seed_dicts(db)
         _seed_params(db)
         _seed_master(db)
+        # ★ 必须在 _seed_master 之后：司机档案是先由主数据建出来的，
+        #   账号要绑定到已存在的 md_driver 行上（顺序反了会「0 个」）。
+        driver_accounts = _seed_driver_accounts(db, roles)
         _seed_attachments(db)
 
         admin = db.query(SysUser).filter(SysUser.username == "admin").one_or_none()
@@ -572,9 +679,14 @@ def main() -> None:
 
         logger.info("=" * 58)
         logger.info("初始数据载入完成")
+        logger.info("  司机端执行层新表：trip_stop_record %d 行 / mobile_notification %d 行",
+                    db.query(TripStopRecord).count(), db.query(MobileNotification).count())
         logger.info("  管理员：admin / %s", settings.ADMIN_INIT_PASSWORD)
         logger.info("  调度员：dispatcher / %s", settings.DEMO_PASSWORD)
         logger.info("  只读：  viewer / %s", settings.DEMO_PASSWORD)
+        logger.info("  ── 司机端（小程序，账号密码登录 /api/auth/login）──")
+        for line in driver_accounts or ["  （没有可开号的司机，请先载入司机档案）"]:
+            logger.info("%s", line)
         logger.info("=" * 58)
     finally:
         db.close()

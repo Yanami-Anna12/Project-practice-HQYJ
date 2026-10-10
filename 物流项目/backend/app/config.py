@@ -66,6 +66,12 @@ class Settings(BaseSettings):
     # SQLite 文件位置（相对 backend/ 目录）
     SQLITE_PATH: str = "data/logistics.db"
 
+    # ---- 文件上传（司机端现场拍照）----
+    # 落盘目录（相对 backend/ 目录）。同时会以 /uploads 挂成静态目录对外访问。
+    UPLOAD_DIR: str = "uploads"
+    # 静态访问前缀，必须与 app/main.py 里 StaticFiles 的 mount 路径一致
+    UPLOAD_URL_PREFIX: str = "/uploads"
+
     # ---- JWT ----
     JWT_SECRET: str = "dev-secret"
     JWT_ALGORITHM: str = "HS256"
@@ -96,6 +102,12 @@ class Settings(BaseSettings):
     def sqlite_file(self) -> Path:
         """SQLite 数据库文件的绝对路径。"""
         return (BASE_DIR / self.SQLITE_PATH).resolve()
+
+    @property
+    def upload_dir(self) -> Path:
+        """上传目录的绝对路径（相对路径按 backend/ 解析）。"""
+        raw = Path(self.UPLOAD_DIR)
+        return raw.resolve() if raw.is_absolute() else (BASE_DIR / raw).resolve()
 
     @property
     def db_backend(self) -> str:

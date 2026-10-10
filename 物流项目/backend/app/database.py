@@ -126,11 +126,20 @@ def ensure_database_exists() -> bool:
 
 
 def create_all_tables() -> None:
-    """按 ORM 元数据建表（IF NOT EXISTS，幂等）。"""
+    """按 ORM 元数据建表（IF NOT EXISTS，幂等）。
+
+    ★ 建表之后必须再补一次「已存在表的增量列」：create_all 只建缺失的表，
+      不会给老表加列（SQLite / MySQL 都没有 ADD COLUMN IF NOT EXISTS）。
+      详见 app/migrations.py。
+    """
     from app import models  # noqa: F401  （副作用导入，注册元数据）
 
     Base.metadata.create_all(bind=engine)
     logger.info("数据表已就绪：%d 张", len(Base.metadata.tables))
+
+    from app.migrations import apply_lightweight_migrations
+
+    apply_lightweight_migrations()
 
 
 def drop_all_tables() -> None:

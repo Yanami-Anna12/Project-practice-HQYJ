@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.errors import AuthError, PermissionDeniedError
-from app.models import SysUser
+from app.models import Driver, SysUser
 from app.security import decode_access_token
 from app.services.rbac import get_effective_permissions
 
@@ -90,3 +90,43 @@ def require_any_permission(*codes: str) -> Callable[..., SysUser]:
         return user
 
     return _dependency
+
+
+# 司机端权限点。与 seed.py 的 PERMISSIONS 保持一致。
+MOBILE_PERMISSION = "mobile:use"
+
+
+def is_driver_account(db: Session, user: SysUser) -> bool:
+    """当前账号是否已绑定司机档案（md_driver.user_id）。
+
+    单独抽出来而不是内联：这段查询是「司机端准入兜底」的唯一判断依据，
+    独立命名后便于阅读与将来复用（例如需要在别处判断身份时）。
+    """
+    return (
+        db.query(Driver)
+        .filter(Driver.user_id == user.id, Driver.is_active.is_(True))
+        .one_or_none()
+        is not None
+    )
+
+
+def require_mobile_access(
+    user: Annotated[SysUser, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> SysUser:
+    """司机端（小程序）接口的准入依赖。
+
+    放行条件满足其一即可：
+
+      1. 持有 `mobile:use` 权限点（司机角色默认拥有；管理员角色是 `*`，自动包含）
+      2. 账号已绑定司机档案（md_driver.user_id = 当前用户）
+
+    ★ 第 2 条是刻意加的「兜底」：司机是**业务身份**，不一定有人记得给它的账号
+      配上权限点。若只认权限点，一个建好司机档案、却没配角色的账号会 403 ——
+      而它显然应该能看自己的趟次。反过来，调度员/管理员走第 1 条，调用不报错。
+    """
+    if MOBILE_PERMISSION in get_effective_permissions(db, user):
+        return user
+    if is_driver_account(db, user):
+        return user
+    raise PermissionDeniedError(f"没有权限 {MOBILE_PERMISSION}（该接口仅限司机端使用）")

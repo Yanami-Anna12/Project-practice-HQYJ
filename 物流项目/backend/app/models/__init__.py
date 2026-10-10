@@ -23,6 +23,7 @@ from app.models.rbac import (
     user_roles,
 )
 from app.models.rule import RuleVersion
+from app.models.mobile import MobileNotification, TripStopRecord
 from app.models.scheduling import (
     DispatchRecord,
     ExceptionEvent,
@@ -71,4 +72,7 @@ __all__ = [
     "ExceptionEvent",
     "ReplanRecord",
     "SchedulingReport",
+    # 司机端（小程序）执行层
+    "TripStopRecord",
+    "MobileNotification",
 ]

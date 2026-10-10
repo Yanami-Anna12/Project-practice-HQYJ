@@ -1,15 +1,17 @@
 """FastAPI 应用入口。
 
-职责：装配 CORS、异常处理器、路由，并提供健康检查。
+职责：装配 CORS、异常处理器、路由、静态目录，并提供健康检查。
 业务逻辑一律不写在这里。
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import ensure_database_exists
@@ -21,6 +23,7 @@ from app.routers import (
     demands,
     dicts,
     master,
+    mobile,
     monitor,
     params,
     permissions,
@@ -29,7 +32,9 @@ from app.routers import (
     rules,
     scheduling,
     users,
+    ws,
 )
+from app.services import realtime
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,6 +80,21 @@ def create_app() -> FastAPI:
     app.include_router(reports.router, prefix="/api")
     app.include_router(rules.router, prefix="/api")
     app.include_router(monitor.router, prefix="/api")
+    app.include_router(mobile.router, prefix="/api")
+    # 实时推送（WebSocket）。挂在 /api 下，地址是 /api/ws/notifications?token=<JWT>
+    app.include_router(ws.router, prefix="/api")
+
+    # 司机端上传的现场照片：以静态目录对外提供访问（/uploads/<文件名>）。
+    # 目录不存在时 StaticFiles 会直接报错，所以这里先建出来。
+    # ★ 这是「演示级」的静态托管：没有鉴权、没有防盗链。生产环境应当
+    #   换成对象存储 + 带签名的临时 URL（见 backend/README.md「已知边界」）。
+    upload_dir = settings.upload_dir
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    app.mount(
+        settings.UPLOAD_URL_PREFIX,
+        StaticFiles(directory=str(upload_dir)),
+        name="uploads",
+    )
 
     @app.get("/api/health", tags=["系统"], summary="健康检查")
     def health() -> dict:
@@ -99,6 +119,21 @@ def create_app() -> FastAPI:
             logger.error("数据库检查失败：%s", exc)
         logger.info("数据库：%s", settings.url_safe())
         logger.info("LLM 方案解释：%s", "已启用" if settings.llm_enabled else "未配置（降级）")
+
+    @app.on_event("startup")
+    async def _bind_realtime_loop() -> None:
+        """把实时推送绑到当前事件循环。
+
+        ★ 必须是 async def：`_startup` 是同步函数，FastAPI 会把它放到工作线程池里
+          跑，那里没有 running loop。而这个函数在事件循环线程里执行，
+          `asyncio.get_running_loop()` 拿到的正是 WebSocket 所在的那个循环。
+
+        ★ 绑定之后，线程池里的业务代码（下发执行）就能跨线程把消息投递回来，
+          见 app/services/realtime.py 的 publish_to_users()。
+        """
+        loop = asyncio.get_running_loop()
+        realtime.bind_loop(loop)
+        logger.info("实时推送已就绪：WebSocket /api/ws/notifications")
 
     return app
 

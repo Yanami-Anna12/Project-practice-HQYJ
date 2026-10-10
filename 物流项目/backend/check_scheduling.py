@@ -24,7 +24,9 @@ def check(name: str, ok: bool, note: str = "") -> None:
     print(f"{'OK  ' if ok else 'FAIL'} {name}{(' — ' + note) if note else ''}")
 
 
-c = httpx.Client(base_url=BASE, timeout=180.0)
+# trust_env=False：开着系统代理（Clash 等）的机器上，httpx 会把 127.0.0.1
+# 的请求也发给代理，脚本会误报成 502。绕过代理只是本机环境问题，与接口无关。
+c = httpx.Client(base_url=BASE, timeout=180.0, trust_env=False)
 
 # 货量维护属于基础数据（stores:manage），调度员没有这个权限 —— 这是刻意的角色分离。
 # 所以先用管理员准备货量，再用调度员跑调度链路。

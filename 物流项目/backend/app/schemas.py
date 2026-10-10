@@ -284,6 +284,9 @@ class StoreOut(BaseModel):
     address: str
     contact: str
     phone: str
+    # 坐标：司机端「一键导航」用；没有坐标时为 None
+    latitude: float | None = None
+    longitude: float | None = None
     is_intersection: bool
     is_active: bool
     route_codes: list[str] = []
@@ -299,6 +302,8 @@ class StoreCreate(BaseModel):
     address: str = ""
     contact: str = ""
     phone: str = ""
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
 
 
 class StoreUpdate(BaseModel):
@@ -310,6 +315,8 @@ class StoreUpdate(BaseModel):
     address: str | None = None
     contact: str | None = None
     phone: str | None = None
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
     is_active: bool | None = None
 
 
@@ -605,6 +612,10 @@ class PlanDetailOut(BaseModel):
     load_amount: float
     sequence: int
     status: str
+    # 司机是否已确认接单（来源 dispatch_record.accepted_at，见 app/models/scheduling.py）。
+    # 同一（方案, 车辆, 趟次）下的所有明细行取值一致 —— 确认是**趟次级**的事实。
+    accepted: bool = False
+    accepted_at: datetime | None = None
 
 
 class TaskDetailOut(BaseModel):
@@ -686,3 +697,266 @@ class FeasibilityOut(BaseModel):
     total_capacity: float
     problems: list[str] = []
     ready: bool = True
+
+
+# ---------------------------------------------------------------------------
+# 司机端（小程序）执行层
+# ---------------------------------------------------------------------------
+# 说明：这些模型的字段刻意「扁平且自解释」—— 小程序端不做二次拼装，
+#       门店地址、电话、坐标、执行状态一次给全，弱网下少发几次请求。
+
+
+class MobileTripStopOut(BaseModel):
+    """趟次里的一个门店站点。"""
+
+    plan_detail_id: int
+    store_id: int
+    store_code: str
+    store_name: str
+    address: str = ""
+    contact: str = ""
+    phone: str = ""
+    latitude: float | None = None
+    longitude: float | None = None
+    load_amount: float = 0
+    sequence: int = 1
+    # planned 未开始 / arrived 已到店 / done 已完成（含旧口径 completed）
+    status: str = "planned"
+    # 该站点最近一次现场动作与打卡时间（没有则为空）
+    last_action: str = ""
+    last_action_at: datetime | None = None
+    photo_attachment_ids: list[int] = []
+
+
+class MobileTripOut(BaseModel):
+    """「我的趟次」列表项。trip_key 用于查询趟次详情。"""
+
+    # trip_key 规则与 dispatch_record.trip_id 一致：task:plan:vehicle:trip
+    trip_key: str
+    task_id: int
+    task_code: str
+    plan_id: int
+    plan_code: str = ""
+    schedule_date: date
+    time_window: str = "AM"
+    trip_no: int = 1
+    vehicle_id: int
+    plate_no: str = ""
+    vehicle_type: str = ""
+    vehicle_type_name: str = ""
+    store_count: int = 0
+    total_load: float = 0
+    done_stores: int = 0
+    arrived_stores: int = 0
+    # planned 未开始 / running 执行中 / done 已完成
+    trip_status: str = "planned"
+    # 司机确认接单：accepted 为真时 accepted_at 必有值（dispatch_record 上的首次确认时间）
+    accepted: bool = False
+    accepted_at: datetime | None = None
+
+
+class MobileTripDetailOut(MobileTripOut):
+    """趟次详情：在列表项基础上补上站点序列。"""
+
+    driver_name: str = ""
+    driver_phone: str = ""
+    dispatch_status: str = ""
+    stops: list[MobileTripStopOut] = []
+
+
+class MobileCheckinRequest(BaseModel):
+    """现场打卡。"""
+
+    plan_detail_id: int
+    # arrive 到店 / depart 离店 / complete 完成
+    action: str = Field(default="arrive", pattern="^(arrive|depart|complete)$")
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    remark: str = Field(default="", max_length=255)
+    photo_attachment_ids: list[int] = []
+
+
+class MobileCheckinResult(BaseModel):
+    """打卡结果：把「这条记录」和「明细/趟次的最新状态」一起返回，前端不必再查一次。"""
+
+    record_id: int
+    plan_detail_id: int
+    trip_key: str
+    action: str
+    occurred_at: datetime
+    # planned / dispatched / arrived / done
+    plan_detail_status: str
+    # planned 未开始 / running 执行中 / done 已完成
+    trip_status: str = ""
+    message: str = ""
+
+
+class MobileExceptionCreate(BaseModel):
+    """司机异常上报。"""
+
+    # 关联调度任务（必填：异常最终要能触发重排/人工处理）
+    task_id: int
+    event_type: str = Field(default="traffic_control", max_length=32)
+    plan_detail_id: int | None = None
+    store_id: int | None = None
+    # 趟次号，如 3:5:12:1
+    trip_key: str = ""
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    remark: str = Field(default="", max_length=255)
+    photo_attachment_ids: list[int] = []
+
+
+class MobileExceptionOut(BaseModel):
+    """异常上报结果（写入现有 exception_event 表）。"""
+
+    id: int
+    task_id: int
+    event_type: str
+    source: str
+    status: str
+    occurred_at: datetime | None = None
+    message: str = ""
+
+
+class MobileFileOut(BaseModel):
+    """文件上传结果。url 可直接在小程序里 <image src>。"""
+
+    attachment_id: int
+    name: str
+    size: int
+    content_type: str = ""
+    storage_path: str
+    url: str
+
+
+class MobileNotificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    content: str = ""
+    biz_type: str = "system"
+    biz_id: int | None = None
+    is_read: bool = False
+    created_at: datetime | None = None
+
+
+class MobileUnreadCountOut(BaseModel):
+    unread: int = 0
+
+
+class MobileNotificationReadOut(BaseModel):
+    id: int
+    is_read: bool
+    unread: int = 0
+
+
+class MobileProfileOut(BaseModel):
+    """当前司机档案。管理员/调度员没有司机档案时 driver 为空。"""
+
+    username: str
+    nickname: str = ""
+    phone: str = ""
+    is_driver: bool = False
+    driver_id: int | None = None
+    driver_code: str = ""
+    driver_name: str = ""
+    driver_phone: str = ""
+    # AM 上午班 / PM 下午班 / FULL 全天
+    shift: str = ""
+    driver_status: str = ""
+    vehicle_count: int = 0
+    vehicles: list["MobileVehicleOut"] = []
+
+
+class MobileVehicleOut(BaseModel):
+    """名下车辆。"""
+
+    id: int
+    plate_no: str
+    vehicle_type_code: str
+    vehicle_type_name: str = ""
+    terrain_capability: str = ""
+    status: str = "idle"
+
+
+class MobileTripAcceptResult(BaseModel):
+    """司机确认接单的结果。
+
+    ★ 幂等语义：重复确认返回 200，`already_accepted=True`，且 `accepted_at`
+      始终是**首次**确认时间（不覆盖）。
+    """
+
+    trip_key: str
+    task_id: int
+    task_code: str = ""
+    vehicle_id: int
+    plate_no: str = ""
+    accepted: bool = True
+    accepted_at: datetime
+    already_accepted: bool = False
+    notified: int = 0
+    message: str = ""
+
+
+# ---------------------------------------------------------------------------
+# 管理端只读首页（小程序「今日看板」）
+# ---------------------------------------------------------------------------
+# 说明：小程序端一次请求拿全首页数字，避免弱网下打 4 个接口。
+#       本组接口全部只读，不写任何业务表。
+
+
+class MobileTaskStatOut(BaseModel):
+    """今日任务数与各状态计数。"""
+
+    total: int = 0
+    by_status: dict[str, int] = {}
+
+
+class MobileTripStatOut(BaseModel):
+    """趟次统计：总数 + 已接单/未接单。"""
+
+    total: int = 0
+    accepted: int = 0
+    pending: int = 0
+    dispatch_records: int = 0
+
+
+class MobileVehicleStatOut(BaseModel):
+    total: int = 0
+    in_transit: int = 0
+
+
+class MobileExceptionStatOut(BaseModel):
+    pending: int = 0
+    total: int = 0
+
+
+class MobileExceptionBriefOut(BaseModel):
+    """看板上的异常摘要（只取展示需要的几列）。"""
+
+    id: int
+    task_id: int
+    task_code: str = ""
+    event_type: str
+    source: str = ""
+    status: str = "pending"
+    occurred_at: datetime | None = None
+    summary: str = ""
+
+
+class MobileManagerOverviewOut(BaseModel):
+    """管理端只读首页聚合数据。"""
+
+    schedule_date: date
+    generated_at: datetime
+    tasks: MobileTaskStatOut
+    trips: MobileTripStatOut
+    vehicles: MobileVehicleStatOut
+    exceptions: MobileExceptionStatOut
+    recent_exceptions: list[MobileExceptionBriefOut] = []
+
+
+# MobileProfileOut 里引用了后面才定义的 MobileVehicleOut，前向引用在此解析
+MobileProfileOut.model_rebuild()

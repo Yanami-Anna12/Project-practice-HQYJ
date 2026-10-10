@@ -16,7 +16,9 @@ def check(name: str, ok: bool, note: str = "") -> None:
     print(f"{'OK  ' if ok else 'FAIL'} {name}{(' — ' + note) if note else ''}")
 
 
-c = httpx.Client(base_url=BASE, timeout=60.0)
+# trust_env=False：开着系统代理（Clash 等）的机器上，httpx 会把 127.0.0.1
+# 的请求也发给代理，脚本会误报成 502。绕过代理只是本机环境问题，与接口无关。
+c = httpx.Client(base_url=BASE, timeout=60.0, trust_env=False)
 r = c.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
 if r.status_code != 200:
     print("登录失败", r.text)

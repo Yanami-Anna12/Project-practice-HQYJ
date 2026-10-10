@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import (
+    DispatchRecord,
     Driver,
     Route,
     SchedulingPlan,
@@ -342,7 +343,15 @@ def _build_explanation(
 # 查询辅助
 # ---------------------------------------------------------------------------
 def get_plan_details(db: Session, plan_id: int) -> list[dict]:
-    """取某个方案的明细（已联好门店与车辆名称，便于直接展示）。"""
+    """取某个方案的明细（已联好门店与车辆名称，便于直接展示）。
+
+    ★ 每行额外带上「该趟司机是否已确认接单」（accepted / accepted_at）：
+      确认记在 `dispatch_record` 上（粒度就是「任务·方案·车·趟」），
+      所以这里按 trip_key = task:plan:vehicle:trip 去匹配。
+      同一（方案, 车辆, 趟次）下的所有门店行取值必然一致 —— 确认是趟次级事实，
+      网页端按「车辆 + 趟次」分组展示时，看到的正是这一列的同一个值。
+    """
+    plan = db.get(SchedulingPlan, plan_id)
     rows = (
         db.query(SchedulingPlanDetail, Store)
         .join(Store, Store.id == SchedulingPlanDetail.store_id)
@@ -357,9 +366,29 @@ def get_plan_details(db: Session, plan_id: int) -> list[dict]:
     vehicles = {v.id: v for v in db.query(Vehicle).all()}
     drivers = {d.id: d.name for d in db.query(Driver).all()}
 
+    # 趟次 → 首次确认时间（只查这一条任务的下发记录，避免扫全表）
+    accepted_map: dict[str, datetime] = {}
+    if plan is not None:
+        for trip_id, accepted_at in (
+            db.query(DispatchRecord.trip_id, DispatchRecord.accepted_at)
+            .filter(
+                DispatchRecord.task_id == plan.task_id,
+                DispatchRecord.plan_id == plan_id,
+                DispatchRecord.accepted_at.isnot(None),
+            )
+            .all()
+        ):
+            accepted_map[trip_id] = accepted_at
+
     out = []
     for detail, store in rows:
         v = vehicles.get(detail.vehicle_id)
+        trip_key = (
+            f"{plan.task_id}:{detail.plan_id}:{detail.vehicle_id}:{detail.trip_no}"
+            if plan is not None
+            else ""
+        )
+        accepted_at = accepted_map.get(trip_key)
         out.append(
             {
                 "id": detail.id,
@@ -376,6 +405,8 @@ def get_plan_details(db: Session, plan_id: int) -> list[dict]:
                 "load_amount": float(detail.load_amount),
                 "sequence": detail.sequence,
                 "status": detail.status,
+                "accepted": accepted_at is not None,
+                "accepted_at": accepted_at,
             }
         )
     return out

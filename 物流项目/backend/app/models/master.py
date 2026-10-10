@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base, now_default
@@ -46,6 +46,10 @@ class Store(Base):
     address: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     contact: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     phone: Mapped[str] = mapped_column(String(32), nullable=False, default="")
+    # 门店坐标（司机端「一键导航」用）。只有 address 文字是打不开地图的，
+    # 所以必须落经纬度；历史数据没有坐标时为 NULL，司机端按「无坐标」降级展示。
+    latitude: Mapped[float | None] = mapped_column(Numeric(10, 6), nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Numeric(10, 6), nullable=True)
     # 是否处于多条线路的交界处（需求：8. 部分门店处于多条线路的交界处）
     is_intersection: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -180,6 +184,10 @@ class Driver(Base):
     shift: Mapped[str] = mapped_column(String(8), nullable=False, default="FULL")
     # 状态：available 可出勤 / leave 请假 / offline 停用
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="available")
+    # 绑定的登录账号（sys_user.id）。司机端小程序用账号密码登录，
+    # 登录后要能反查「我是哪个司机」，而 sys_user 与 md_driver 原本没有任何关联字段，
+    # 所以在这里补一个。允许为空：不是每个司机都有账号（可先建档、后开号）。
+    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     remark: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
