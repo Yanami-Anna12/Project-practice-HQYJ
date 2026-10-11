@@ -6,7 +6,9 @@
 
 ## 1. 仓库概况
 
-单个 git 仓库，remote 名字叫 **`main`**（不是 `origin`）：
+单个 git 仓库。★ 别搞混：**分支**叫 `main`，**remote** 叫 `origin`（默认那个）——
+所以推送就是 `git push origin main`。（本文档原来写成「remote 名字叫 main」，是错的，2026-10-11 已核实：
+`git remote -v` 只有 `origin`，`git branch --show-current` 是 `main`。）
 `https://github.com/Yanami-Anna12/Project-practice-HQYJ`
 
 | 目录 | 是什么 | 技术栈 |
