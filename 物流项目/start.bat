@@ -119,23 +119,53 @@ popd
 
 REM ---------- 启动 ----------
 echo [5/5] 启动服务 ...
+REM 先删掉上次留下的端口文件：否则下面的等待会立刻读到旧值，打印出错的端口
+del "%ROOT%backend\.runtime_port" >nul 2>nul
 start "调度后端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py"
-timeout /t 6 /nobreak >nul
-REM 读后端实际端口（run.py 写入的 .runtime_port），让前端把 /api 代理到正确端口
+
+REM 等 run.py 把实际端口写进 backend\.runtime_port（最多约 20 秒；首次启动要建表灌演示
+REM 数据会更久），再拿它给前端设 /api 代理目标。用 ping 而不是 timeout 等待：
+REM timeout 在「stdin 被重定向/没有控制台」时会直接报 Input redirection 退出，等于没等。
 set "BPORT="
+set /a BWAIT=0
+:wait_bport
 if exist "%ROOT%backend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%backend\.runtime_port") do set "BPORT=%%p"
-if defined BPORT set "VITE_PROXY_TARGET=http://127.0.0.1:%BPORT%"
+if defined BPORT goto :have_bport
+set /a BWAIT+=1
+if %BWAIT% geq 10 goto :have_bport
+ping -n 3 127.0.0.1 >nul 2>nul
+goto :wait_bport
+:have_bport
+if not defined BPORT set "BPORT=8000"
+set "VITE_PROXY_TARGET=http://127.0.0.1:%BPORT%"
+
+del "%ROOT%frontend\.runtime_port" >nul 2>nul
 start "调度前端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%frontend" && %PKG% run dev"
+
+REM 前端端口由 frontend/vite.config.js 探测后写入 .runtime_port（5175 被占用、或被
+REM Windows 保留端口段挡住时会自动换端口），等它写出来再读，用于打印和打开浏览器。
+set "FPORT="
+set /a FWAIT=0
+:wait_fport
+if exist "%ROOT%frontend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%frontend\.runtime_port") do set "FPORT=%%p"
+if defined FPORT goto :have_fport
+set /a FWAIT+=1
+if %FWAIT% geq 10 goto :have_fport
+ping -n 3 127.0.0.1 >nul 2>nul
+goto :wait_fport
+:have_fport
+if not defined FPORT set "FPORT=5175"
 
 echo.
 echo ============================================================
 echo   已启动两个窗口：
-echo     · 调度后端 8000   http://127.0.0.1:8000/docs
-echo     · 调度前端 5175   http://127.0.0.1:5175
-echo       （若该端口被系统保留/占用，Vite 会自动用 5176、5177…，
-echo         请以「调度前端」窗口里打印的 Local 地址为准）
+echo     · 调度后端 %BPORT%   http://127.0.0.1:%BPORT%/docs
+echo     · 调度前端 %FPORT%   http://127.0.0.1:%FPORT%
+echo       （Vite 启动前会先探测端口：5175 若被占用、或落在 Windows 保留端口段里
+echo         （netsh int ipv4 show excludedportrange protocol=tcp），会自动换到
+echo         5250 / 5300…；以「调度前端」窗口里的 Local 地址为准）
 echo.
-echo   等约 10 秒后浏览器打开： http://127.0.0.1:5175
+echo   浏览器即将打开： http://127.0.0.1:%FPORT%
 echo.
 echo   演示账号（登录页点卡片自动填入，密码见 backend\.env）：
 echo     admin       系统管理员（全部 29 个权限）
@@ -144,5 +174,5 @@ echo     viewer      只读观察者
 echo.
 echo   关闭服务：双击 stop.bat，或直接关掉这两个黑窗口。
 echo ============================================================
-timeout /t 8 /nobreak >nul
-start "" http://127.0.0.1:5175
+ping -n 4 127.0.0.1 >nul 2>nul
+start "" http://127.0.0.1:%FPORT%

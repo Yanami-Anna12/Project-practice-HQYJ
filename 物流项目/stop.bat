@@ -10,6 +10,13 @@ echo.
 set /a KILLED=0
 set /a FAILED=0
 set "KILLED_PIDS="
+set "ROOT=%~dp0"
+
+REM ---------- 实际端口从 .runtime_port 读（端口可能因被占用/Windows 保留段而顺延）----------
+set "BPORT=8000"
+if exist "%ROOT%backend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%backend\.runtime_port") do set "BPORT=%%p"
+set "FPORT=5175"
+if exist "%ROOT%frontend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%frontend\.runtime_port") do set "FPORT=%%p"
 
 REM ---------- 1) 先按 start.bat 打开的控制台窗口标题，结束整棵进程树 ----------
 REM 这一步专治 uvicorn reload 模式：reloader 父进程会跟随窗口被 /T 一并结束。
@@ -17,18 +24,18 @@ call :killtree "调度后端"
 call :killtree "调度前端"
 
 REM ---------- 2) 再按端口兜底（服务不是由 start.bat 启动的情况）----------
-for %%P in (8000 5175) do call :killport %%P
+for %%P in (%BPORT% %FPORT% 8000 5175) do call :killport %%P
 
 echo.
 if "%KILLED%%FAILED%"=="00" (
-    echo   没有需要停止的进程（端口 8000 / 5175 都空闲）。
+    echo   没有需要停止的进程（端口 %BPORT% / %FPORT% 都空闲）。
 ) else (
     echo   已结束 %KILLED% 个进程，失败 %FAILED% 个。
     if not "%FAILED%"=="0" echo   失败通常是权限不足：请右键本文件，选择“以管理员身份运行”。
     echo   提示：如果之前 start.bat 开的黑窗口还留着，直接关掉它们也可以。
 )
-call :check 8000
-call :check 5175
+call :check %BPORT%
+call :check %FPORT%
 echo.
 pause
 exit /b 0
