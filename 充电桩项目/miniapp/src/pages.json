@@ -1,0 +1,113 @@
+{
+  "pages": [
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "运维工作台",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/tasks/index",
+      "style": {
+        "navigationBarTitleText": "我的作业任务",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/tasks/detail",
+      "style": {
+        "navigationBarTitleText": "作业任务详情"
+      }
+    },
+    {
+      "path": "pages/inspect/form",
+      "style": {
+        "navigationBarTitleText": "巡检情况录入"
+      }
+    },
+    {
+      "path": "pages/fault/index",
+      "style": {
+        "navigationBarTitleText": "故障管理",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/fault/report",
+      "style": {
+        "navigationBarTitleText": "故障上报"
+      }
+    },
+    {
+      "path": "pages/fault/detail",
+      "style": {
+        "navigationBarTitleText": "故障详情"
+      }
+    },
+    {
+      "path": "pages/scan/scan",
+      "style": {
+        "navigationBarTitleText": "扫码查桩报修"
+      }
+    },
+    {
+      "path": "pages/messages/index",
+      "style": {
+        "navigationBarTitleText": "消息中心",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/messages/detail",
+      "style": {
+        "navigationBarTitleText": "消息详情"
+      }
+    },
+    {
+      "path": "pages/board/index",
+      "style": {
+        "navigationBarTitleText": "掌上看板",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/board/orders",
+      "style": {
+        "navigationBarTitleText": "工单管理",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/board/piles",
+      "style": {
+        "navigationBarTitleText": "充电桩状态",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "充电桩运维",
+    "navigationBarBackgroundColor": "#1677ff",
+    "backgroundColor": "#f5f6f8"
+  },
+  "h5": {
+    "tabBar": {
+      "list": []
+    }
+  }
+}

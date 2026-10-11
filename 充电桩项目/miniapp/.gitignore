@@ -1,0 +1,18 @@
+node_modules/
+dist/
+unpackage/
+.DS_Store
+*.local
+.env.local
+.runtime_port
+.appid
+.verify_*
+
+# ★ 微信开发者工具生成的两个文件，**必须忽略**。
+#   它们本不该出现在源码目录里 —— 只有在「导入项目」时选错了目录
+#   （选了 miniapp\ 而不是 miniapp\dist\build\mp-weixin）才会被写到这里。
+#   而 project.config.json 里带着真实 AppID，一旦提交就会触发
+#   GitHub secret scanning 的「腾讯微信 API 应用 ID」告警（要改写历史才能清掉）。
+#   正确做法：AppID 放 .appid（已忽略），开发者工具只导入 dist\build\mp-weixin。
+project.config.json
+project.private.config.json
