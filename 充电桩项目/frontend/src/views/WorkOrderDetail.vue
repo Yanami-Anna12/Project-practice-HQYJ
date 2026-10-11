@@ -43,7 +43,13 @@
           <a-descriptions-item label="来源">
             <a-tag :color="wo.source === 'AI 生成' ? 'purple' : 'default'">{{ wo.source }}</a-tag>
           </a-descriptions-item>
-          <a-descriptions-item label="站点（{{ (wo.station_names || []).length }}）" :span="2">
+          <!-- ★ 不能写成 label="站点（{{ ... }}）"：a-descriptions-item 的 label 是**静态属性**，
+               没有 `:` 前缀时 Vue 不会解析里面的插值，页面上会原样显示
+               「站点（{{ (wo.station_names || []).length }}）」。必须用绑定。 -->
+          <a-descriptions-item
+            :label="'站点（' + (wo.station_names || []).length + '）'"
+            :span="2"
+          >
             {{ (wo.station_names || []).join('、') || wo.station_name || '-' }}
           </a-descriptions-item>
           <a-descriptions-item label="站点地点">
@@ -454,8 +460,16 @@ async function openInspection(subtask) {
     images: [],
   })
   const res = await workOrderApi.inspectionTemplate({ order_type: wo.value.order_type || '巡视' })
+  // ★ 字段名必须在这里对齐一次：
+  //   后端 GET /work-orders/inspections/template 返回的是 `{ group, name }`，
+  //   而提交接口 POST /work-orders/inspections 要的是 `{ item_group, item_name }`。
+  //   以前直接 `...t` 展开，于是 item_name 恒为 undefined ——
+  //   表现有两个：①弹窗里每行的巡检项标题是**空白**的；
+  //   ②提交时后端返回 422「参数校验失败：items.0.item_name Field required」。
+  //   （2026-10-11 用户实测报的就是这个错。）对齐后模板其余部分不用改。
   templateItems.value = (res.data?.template || []).map((t) => ({
-    ...t,
+    item_name: t.name,
+    item_group: t.group,
     result: '正常',
     remark: '',
   }))

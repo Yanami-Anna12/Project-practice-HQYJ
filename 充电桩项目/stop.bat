@@ -8,6 +8,9 @@ echo ============================================================
 echo.
 
 set /a KILLED=0
+set "ROOT=%~dp0"
+set "FPORT=5185"
+if exist "%ROOT%frontend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%frontend\.runtime_port") do set "FPORT=%%p"
 set /a FAILED=0
 set "KILLED_PIDS="
 
@@ -17,7 +20,7 @@ call :killtree "充电桩运维后端"
 call :killtree "充电桩运维前端"
 
 REM ---------- 2) 再按端口兜底（服务不是由 start.bat 启动的情况）----------
-for %%P in (8010 5185) do call :killport %%P
+for %%P in (8010 %FPORT% 5185) do call :killport %%P
 
 echo.
 if "%KILLED%%FAILED%"=="00" (
@@ -28,7 +31,7 @@ if "%KILLED%%FAILED%"=="00" (
     echo   提示：如果之前 start.bat 开的黑窗口还留着，直接关掉它们也可以。
 )
 call :check 8010
-call :check 5185
+call :check %FPORT%
 echo.
 pause
 exit /b 0

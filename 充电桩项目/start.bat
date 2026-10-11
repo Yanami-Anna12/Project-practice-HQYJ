@@ -61,7 +61,8 @@ if errorlevel 1 (
 
 echo [2/4] 检查前端依赖 ...
 if not exist "%ROOT%frontend\node_modules" (
-    if exist "%ROOT%frontend\package.json" (
+    del "%ROOT%frontend\.runtime_port" >nul 2>nul
+if exist "%ROOT%frontend\package.json" (
         echo       首次运行，正在安装 ...
         pushd "%ROOT%frontend"
         call %PKG% install
@@ -74,22 +75,39 @@ if not exist "%ROOT%frontend\node_modules" (
 )
 
 echo [3/4] 启动后端（首次启动会自动建库并注入演示数据，约需 20 秒）...
-start "充电桩运维后端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py"
+start "充电桩运维后端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%backend" && "%PY%" run.py --host 0.0.0.0"
 
 echo [4/4] 启动前端 ...
 REM 读后端实际端口（run.py 写入的 .runtime_port），让前端把 /api 代理到正确端口
 set "BPORT="
 if exist "%ROOT%backend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%backend\.runtime_port") do set "BPORT=%%p"
 if defined BPORT set "VITE_API_TARGET=http://127.0.0.1:%BPORT%"
+del "%ROOT%frontend\.runtime_port" >nul 2>nul
 if exist "%ROOT%frontend\package.json" (
     timeout /t 12 /nobreak >nul
     start "充电桩运维前端" cmd /k "chcp 65001 >nul && cd /d "%ROOT%frontend" && %PKG% run dev"
 )
 
+REM 前端端口由 frontend/vite.config.js 探测后写入 .runtime_port（5185 被占用、或落在
+REM Windows 保留端口段里时会自动换端口），等它写出来再读，用于打印真实地址。
+REM 用 ping 而不是 timeout 等待：timeout 在「stdin 被重定向/没有控制台」时会直接
+REM 报 Input redirection 退出，等于没等。
+set "FPORT="
+set /a FWAIT=0
+:wait_fport
+if exist "%ROOT%frontend\.runtime_port" for /f "usebackq delims=" %%p in ("%ROOT%frontend\.runtime_port") do set "FPORT=%%p"
+if defined FPORT goto :have_fport
+set /a FWAIT+=1
+if %FWAIT% geq 10 goto :have_fport
+ping -n 3 127.0.0.1 >nul 2>nul
+goto :wait_fport
+:have_fport
+if not defined FPORT set "FPORT=5185"
+
 echo.
 echo ============================================================
 echo   后端接口文档： http://127.0.0.1:8010/docs
-echo   前端管理后台： http://127.0.0.1:5185
+echo   前端管理后台： http://127.0.0.1:%FPORT%
 echo.
 echo   演示账号（密码均为 123456，admin 为 admin123）：
 echo     admin          平台管理员（平台数据权限）
@@ -97,8 +115,9 @@ echo     project_admin  项目管理员（项目数据权限）
 echo     station_admin  站点管理员（站点数据权限）
 echo     inspector      运维人员（个人数据权限）
 echo.
-echo   注意：端口 8010/5185 刻意与「车辆智能调度 Agent」项目
-echo         （8000/5175）错开，两个项目可同时运行。
+echo   注意：端口刻意与「车辆智能调度 Agent」项目错开（本机 8010 对 8000），
+echo         两个项目可同时运行。前端若 5185 不可用会自动顺延到 5270/5300…，
+echo         以「充电桩运维前端」窗口里的 Local 地址为准。
 echo   关闭服务：双击 stop.bat，或直接关掉命令行窗口。
 echo ============================================================
 pause
