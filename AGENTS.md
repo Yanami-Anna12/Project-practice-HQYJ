@@ -6,9 +6,11 @@
 
 ## 1. 仓库概况
 
-单个 git 仓库。★ 别搞混：**分支**叫 `main`，**remote** 叫 `origin`（默认那个）——
-所以推送就是 `git push origin main`。（本文档原来写成「remote 名字叫 main」，是错的，2026-10-11 已核实：
-`git remote -v` 只有 `origin`，`git branch --show-current` 是 `main`。）
+单个 git 仓库。★ 别搞混：**分支**叫 `main`，**remote 也叫 `main`**（2026-10-14 本机实测：
+`git remote -v` 里只有 `main` 这一个远程、`origin` **根本不存在**；`git branch -vv` 的 upstream 是 `[main/main]`）——
+所以推送就是 `git push main main`，或者直接 `git push`（upstream 已经设好）。
+★ 本文档 2026-10-11 曾把这里「纠正」成 remote 叫 origin，**那次纠正本身才是错的**（最早写的「remote 名字叫 main」是对的），
+别再改回去 —— 一条 `git remote -v` 就能验，改之前先看它。
 `https://github.com/Yanami-Anna12/Project-practice-HQYJ`
 
 | 目录 | 是什么 | 技术栈 |
@@ -25,8 +27,8 @@
 
 | 项 | 值 |
 |---|---|
-| Python | `D:\miniconda3\envs\py312\python.exe`（依赖齐全，含 ortools/langgraph/pymysql/jose）★ **这台机器的 conda 在 D 盘**，`C:\Users\12966\...` 那套是上一台机器的，已不存在 |
-| node / npm | `D:\nodejs\node.exe` v24.9 / `D:\nodejs\npm.cmd` 10.9（★ 已不是 `C:\nvm4w\...`） |
+| Python | `C:\Users\12966\miniconda3\envs\py312\python.exe`（Python **3.12.13**，依赖齐全，含 ortools / langgraph / pymysql / jose / pdfplumber / pypdf）；base 是 `C:\Users\12966\miniconda3\python.exe`。★ 2026-10-14 实测：**本机 conda 就在 C 盘用户目录下，`D:\miniconda3` 不存在**（曾经写成 D 盘，是错的） |
+| node / npm | `C:\nvm4w\nodejs\node.exe`（**v24.12.0**）/ `C:\nvm4w\nodejs\npm.cmd`。★ 2026-10-14 实测：**本机 node 就在 `C:\nvm4w\`，`D:\nodejs` 不存在**（曾经写成 D 盘，是错的）；另注意 PATH 里的 `node` 会先命中 DSH 自带 shim（`…\dsh-desktop\harness\.desktop-bin\node.cmd`，v24.9），**脚本里要写全路径** |
 | pnpm | 存在且能跑（10.34.5），但**前端依赖一律用 npm 装**：pnpm 装出来的 `node_modules` 会缺包（vite 报缺 picomatch）；`pnpm run dev` 只是当脚本运行器用，可以 |
 | MySQL | 8.0 已运行（127.0.0.1:3306），库 `logistics_db`，凭据在 `物流项目/backend/.env`（★ 本机 mysql.exe 在 `C:\Program Files\MySQL\MySQL Server 8.0\bin`） |
 | Edge | `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`，可无头截图验证页面（playwright-core 传 `executablePath`） |
